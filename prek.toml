@@ -28,7 +28,11 @@ hooks = [
 ]
 
 [[repos]]
-hooks = [{ id = "biome-check", exclude = { glob = ["**/worker-configuration.d.ts"] } }]
+hooks = [
+  { id = "biome-check", files = "\\.(ts|tsx|js|jsx|json|html)$", exclude = { glob = [
+	"**/worker-configuration.d.ts"
+  ] } },
+]
 repo = "https://github.com/biomejs/pre-commit"
 # when updating this version, remember to also update `$schema` in `biome.jsonc`
 rev = "v2.4.8"

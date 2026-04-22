@@ -4,6 +4,13 @@
         "indentStyle": "space",
         "indentWidth": 4
     },
+    "html": {
+        "experimentalFullSupportEnabled": true,
+        "formatter": {
+            "enabled": true,
+            "indentStyle": "space"
+        }
+    },
     "linter": {
         "rules": {
             "recommended": true
