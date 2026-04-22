@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Casa</title>
+
+        <script
+            src="https://cdn.jsdelivr.net/npm/htmx.org@4.0.0-beta2/dist/htmx.min.js"
+            integrity="sha256-pjSzEogUoaAIpUrIIHV+0YhaaPiIuW6H0uuBwrIgu2o="
+            crossorigin="anonymous"
+        ></script>
+    </head>
+    <body>
+        <h1>Freezer</h1>
+
+        <form hx-post="/items" hx-target="#list" hx-swap="innerHTML">
+            <input name="name" placeholder="Item name" required>
+            <button type="submit">Add</button>
+        </form>
+
+        <ul id="list" hx-get="/items" hx-trigger="load"></ul>
+    </body>
+</html>

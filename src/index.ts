@@ -15,8 +15,18 @@ import { DurableObject } from "cloudflare:workers";
 
 const DURABLE_OBJECT_NAME = "casa";
 
+import HomepageHtml from "./index.html";
+
+function initDatabaseSchema(sql: SqlStorage): void {
+    sql.exec(`CREATE TABLE IF NOT EXISTS freezer__items(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT,
+		quantity INTEGER)`);
+}
+
 /** A Durable Object's behavior is defined in an exported Javascript class */
-export class MyDurableObject extends DurableObject<Env> {
+export class CasaDurableObject extends DurableObject<Env> {
+    sql: SqlStorage;
     /**
      * The constructor is invoked once upon creation of the Durable Object, i.e. the first call to
      * 	`DurableObjectStub::get` for a given identifier (no-op constructors can be omitted)
@@ -26,17 +36,30 @@ export class MyDurableObject extends DurableObject<Env> {
      */
     constructor(ctx: DurableObjectState, env: Env) {
         super(ctx, env);
+        this.sql = ctx.storage.sql;
+
+        initDatabaseSchema(this.sql);
     }
 
-    /**
-     * The Durable Object exposes an RPC method sayHello which will be invoked when a Durable
-     *  Object instance receives a request from a Worker via the same method invocation on the stub
-     *
-     * @param name - The name provided to a Durable Object instance from a Worker
-     * @returns The greeting to be sent back to the Worker
-     */
-    async sayHello(name: string): Promise<string> {
-        return `Hello, ${name}!`;
+    async getItems(): Promise<Response> {
+        const rows = this.sql.exec("SELECT * FROM freezer__items").toArray();
+
+        const html = rows
+            .map((r) => `<li>${r.name} (${r.quantity ?? 1})</li>`)
+            .join("");
+
+        return new Response(html, {
+            headers: { "Content-Type": "text/html" },
+        });
+    }
+
+    async addItem(name: string): Promise<Response> {
+        this.sql.exec(
+            "INSERT INTO freezer__items (name, quantity) VALUES (?, 1)",
+            [name],
+        );
+
+        return this.getItems();
     }
 }
 
@@ -50,17 +73,31 @@ export default {
      * @returns The response to be sent back to the client
      */
     async fetch(request, env, ctx): Promise<Response> {
+        const url = new URL(request.url);
+
         // Create a stub to open a communication channel with the Durable Object
         // instance named "casa".
         //
         // Requests from all Workers to the Durable Object instance named "casa"
         // will go to a single remote Durable Object instance.
-        const stub = env.MY_DURABLE_OBJECT.getByName(DURABLE_OBJECT_NAME);
+        const stub = env.CASA_DURABLE_OBJECT.getByName(DURABLE_OBJECT_NAME);
 
-        // Call the `sayHello()` RPC method on the stub to invoke the method on
-        // the remote Durable Object instance.
-        const greeting = await stub.sayHello("world");
+        if (url.pathname === "/") {
+            return new Response(HomepageHtml, {
+                headers: { "Content-Type": "text/html" },
+            });
+        }
 
-        return new Response(greeting);
+        if (url.pathname === "/items" && request.method === "GET") {
+            return stub.getItems();
+        }
+
+        if (url.pathname === "/items" && request.method === "POST") {
+            const formData = await request.formData();
+            const name = formData.get("name");
+            return stub.addItem(name);
+        }
+
+        return new Response("Not found", { status: 404 });
     },
 } satisfies ExportedHandler<Env>;
