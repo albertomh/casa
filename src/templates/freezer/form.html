@@ -1,0 +1,10 @@
+<form
+    id="freezer-form"
+    hx-post="/freezer/items"
+    hx-target="#list"
+    hx-swap="innerHTML"
+    hx-swap-oob="true"
+>
+    <input name="name" placeholder="Item name" required>
+    <button type="submit">Add</button>
+</form>

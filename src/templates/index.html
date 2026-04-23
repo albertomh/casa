@@ -13,11 +13,8 @@
     <body>
         <h1>Freezer</h1>
 
-        <form hx-post="/items" hx-target="#list" hx-swap="innerHTML">
-            <input name="name" placeholder="Item name" required>
-            <button type="submit">Add</button>
-        </form>
+        {{ freezer-form }}
 
-        <ul id="list" hx-get="/items" hx-trigger="load"></ul>
+        <ul id="list" hx-get="/freezer/items" hx-trigger="load"></ul>
     </body>
 </html>

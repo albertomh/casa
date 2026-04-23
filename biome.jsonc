@@ -9,7 +9,10 @@
         "formatter": {
             "enabled": true,
             "indentStyle": "space"
-        }
+        },
+		"parser": {
+			"interpolation": true
+		}
     },
     "linter": {
         "rules": {
