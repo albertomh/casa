@@ -1,5 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { runMigrations } from "./db";
+import { Freezer, FreezerRenderer } from "./freezer";
+import FreezerFormHtml from "./freezer/templates/form.html";
 import HomepageHtml from "./templates/index.html";
 
 /**
@@ -17,47 +19,6 @@ import HomepageHtml from "./templates/index.html";
 
 const DURABLE_OBJECT_NAME = "casa";
 
-type FreezerItem = {
-    id: number;
-    name: string;
-    quantity: number;
-};
-
-class Freezer {
-    constructor(private sql: SqlStorage) {}
-
-    listItems() {
-        return this.sql.exec("SELECT * FROM freezer__items").toArray();
-    }
-
-    addItem(name: string) {
-        this.sql.exec(
-            "INSERT INTO freezer__items (name, quantity) VALUES (?, 1)",
-            [name],
-        );
-    }
-}
-
-class FreezerRenderer {
-    private escape(s: unknown): string {
-        return String(s)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;");
-    }
-
-    list(items: FreezerItem[]): string {
-        return items
-            .map(
-                (r) => `
-<li id="item-${r.id}">
-  ${this.escape(r.name)} (${r.quantity ?? 1})
-</li>`,
-            )
-            .join("");
-    }
-}
-
 export class CasaDurableObject extends DurableObject<Env> {
     freezer: Freezer;
     freezerRenderer: FreezerRenderer;
@@ -66,7 +27,7 @@ export class CasaDurableObject extends DurableObject<Env> {
         super(ctx, env);
 
         const sql = ctx.storage.sql;
-		ctx.blockConcurrencyWhile(async () => runMigrations(ctx.storage.sql));
+        ctx.blockConcurrencyWhile(async () => runMigrations(ctx.storage.sql));
 
         this.freezer = new Freezer(sql);
         this.freezerRenderer = new FreezerRenderer();
