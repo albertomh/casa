@@ -1,21 +1,51 @@
+type FreezerTray = {
+    id: number;
+    freezer_id: number;
+    label: string;
+};
 type FreezerItem = {
     id: number;
+    tray_id: number;
+    tray_label: string;
     name: string;
     quantity: number;
     added_at: string; // ISO 8601 UTC, e.g. "2024-01-15 13:45:00",
 };
 
-export class Freezer {
+export class FreezerRepository {
     constructor(private sql: SqlStorage) {}
 
-    listItems() {
-        return this.sql.exec("SELECT * FROM freezer__items").toArray();
+    listTrays(freezer_id: number) {
+        return this.sql
+            .exec("SELECT * FROM freezer__trays WHERE freezer_id = ?", [
+                freezer_id,
+            ])
+            .toArray() as FreezerTray[];
     }
 
-    addItem(name: string) {
+    addTray(freezer_id: number, label: string) {
         this.sql.exec(
-            "INSERT INTO freezer__items (name, quantity) VALUES (?, 1)",
-            [name],
+            "INSERT INTO freezer__trays (freezer_id, label) VALUES (?, ?)",
+            [freezer_id, label],
+        );
+    }
+
+    listItemsByFreezer(freezer_id: number) {
+        return this.sql
+            .exec(
+                `SELECT freezer__items.*, freezer__trays.label AS tray_label
+                FROM freezer__items
+                JOIN freezer__trays ON freezer__items.tray_id = freezer__trays.id
+                WHERE freezer__trays.freezer_id = ?`,
+                [freezer_id],
+            )
+            .toArray() as FreezerItem[];
+    }
+
+    addItem(tray_id: number, name: string) {
+        this.sql.exec(
+            "INSERT INTO freezer__items (tray_id, name, quantity) VALUES (?, ?, 1)",
+            [tray_id, name],
         );
     }
 }
@@ -33,7 +63,7 @@ export class FreezerRenderer {
             .map(
                 (r) => `
 <li id="item-${r.id}">
-  ${this.escape(r.name)} (${r.quantity ?? 1}) [${this.escape(r.added_at)}]
+  (${r.quantity ?? 1}) ${this.escape(r.name)} [${this.escape(r.added_at)}]
 </li>`,
             )
             .join("");
