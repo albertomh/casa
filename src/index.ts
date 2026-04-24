@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import FreezerFormHtml from "./templates/freezer/form.html";
+import { runMigrations } from "./db";
 import HomepageHtml from "./templates/index.html";
 
 /**
@@ -22,13 +22,6 @@ type FreezerItem = {
     name: string;
     quantity: number;
 };
-
-function initDatabaseSchema(sql: SqlStorage): void {
-    sql.exec(`CREATE TABLE IF NOT EXISTS freezer__items(
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT,
-		quantity INTEGER)`);
-}
 
 class Freezer {
     constructor(private sql: SqlStorage) {}
@@ -65,7 +58,6 @@ class FreezerRenderer {
     }
 }
 
-/** A Durable Object's behavior is defined in an exported Javascript class */
 export class CasaDurableObject extends DurableObject<Env> {
     freezer: Freezer;
     freezerRenderer: FreezerRenderer;
@@ -74,7 +66,7 @@ export class CasaDurableObject extends DurableObject<Env> {
         super(ctx, env);
 
         const sql = ctx.storage.sql;
-        initDatabaseSchema(sql);
+		ctx.blockConcurrencyWhile(async () => runMigrations(ctx.storage.sql));
 
         this.freezer = new Freezer(sql);
         this.freezerRenderer = new FreezerRenderer();
