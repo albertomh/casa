@@ -1,3 +1,4 @@
+import AllTraysHtml from "./templates/all_trays.html";
 import TrayHtml from "./templates/tray.html";
 import TrayItemHtml from "./templates/tray_item.html";
 
@@ -142,7 +143,8 @@ export class FreezerRenderer {
     }
 
     trays(trays: FreezerTray[], items: FreezerItem[]): string {
-        return trays.map((t) => this.tray(t, items)).join("");
+        const inner = trays.map((t) => this.tray(t, items)).join("");
+        return AllTraysHtml.replace("{{ trays }}", inner);
     }
 
     trayItem(item: FreezerItem): string {

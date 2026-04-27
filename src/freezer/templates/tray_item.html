@@ -1,12 +1,26 @@
 <li id="item-{{ id }}">
-    <button
-        type="button"
-        hx-post="/freezers/items/{{ id }}/decrement"
-        hx-target="#item-{{ id }}"
-        hx-swap="outerHTML"
-    >
-        -
-    </button>
+    <div class="join">
+        <button
+            type="button"
+            hx-post="/freezers/items/{{ id }}/decrement"
+            hx-target="#item-{{ id }}"
+            hx-swap="outerHTML"
+            class="join-item btn btn-sm"
+        >
+            -
+        </button>
+        <span class="join-item btn btn-sm font-mono w-[2ch] pointer-events-none"
+            >{{ quantity }}</span
+        >
+        <button
+            type="button"
+            hx-post="/freezers/items/{{ id }}/increment"
+            hx-target="#item-{{ id }}"
+            hx-swap="outerHTML"
+            class="join-item btn btn-sm"
+        >
+            +
+        </button>
+    </div>
     {{ name }}
-    ({{ quantity }})
 </li>
