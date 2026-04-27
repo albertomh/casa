@@ -8,6 +8,7 @@
     hx-post="/freezers/trays/{{ tray_id }}/items"
     hx-target="#tray-{{ tray_id }}"
     hx-swap="innerHTML"
+    hx-on::after-request="this.reset()"
 >
     <input name="name" placeholder="Add item">
     <button type="submit">Add</button>
