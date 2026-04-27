@@ -153,7 +153,8 @@ export class FreezerRenderer {
             .replaceAll(">", "&gt;");
     }
 
-    tray(tray: FreezerTray, items: FreezerItem[]): string {
+    tray(tray: FreezerTray, items: FreezerItem[], index = 0): string {
+        const label = "❄️ ".repeat(index + 1);
         const trayItems = items
             .filter((i) => i.tray_id === tray.id)
             .map((i) =>
@@ -164,12 +165,12 @@ export class FreezerRenderer {
             .join("");
 
         return TrayHtml.replaceAll("{{ tray_id }}", this.escape(tray.id))
-            .replaceAll("{{ tray_label }}", this.escape(tray.label))
+            .replaceAll("{{ tray_label }}", label)
             .replace("{{ items }}", trayItems);
     }
 
     trays(trays: FreezerTray[], items: FreezerItem[]): string {
-        const inner = trays.map((t) => this.tray(t, items)).join("");
+        const inner = trays.map((t, i) => this.tray(t, items, i)).join("");
         return AllTraysHtml.replace("{{ trays }}", inner);
     }
 
