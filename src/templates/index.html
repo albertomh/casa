@@ -74,6 +74,10 @@
                 values: { tray_id: trayId },
             });
         });
+
+        document.addEventListener("htmx:afterRequest", (e) => {
+            if (e.target.tagName === "FORM") e.target.reset();
+        });
         </script>
     </head>
 
