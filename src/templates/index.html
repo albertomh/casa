@@ -75,8 +75,13 @@
             });
         });
 
-        document.addEventListener("htmx:afterRequest", (e) => {
+        document.addEventListener("submit", (e) => {
             if (e.target.tagName === "FORM") e.target.reset();
+        });
+
+        document.addEventListener("htmx:afterRequest", (e) => {
+            const elt = e.detail?.elt ?? e.target;
+            if (elt?.tagName === "FORM") elt.reset();
         });
         </script>
     </head>
