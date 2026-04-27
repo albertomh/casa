@@ -1,15 +1,22 @@
-<li id="item-{{ id }}">
-    <div class="join">
+<li
+    id="item-{{ id }}"
+    draggable="true"
+    data-item-id="{{ id }}"
+    class="flex items-center gap-2"
+>
+    <span class="cursor-grab text-base-content/40 select-none">⠿</span>
+    <div class="flex">
         <button
             type="button"
             hx-post="/freezers/items/{{ id }}/decrement"
             hx-target="#item-{{ id }}"
             hx-swap="outerHTML"
-            class="join-item btn btn-sm"
+            class="btn btn-sm rounded-r-none"
         >
             -
         </button>
-        <span class="join-item btn btn-sm font-mono w-[2ch] pointer-events-none"
+        <span
+            class="btn btn-sm rounded-none border-x-0 bg-white font-mono w-[2ch] pointer-events-none"
             >{{ quantity }}</span
         >
         <button
@@ -17,7 +24,7 @@
             hx-post="/freezers/items/{{ id }}/increment"
             hx-target="#item-{{ id }}"
             hx-swap="outerHTML"
-            class="join-item btn btn-sm"
+            class="btn btn-sm rounded-l-none"
         >
             +
         </button>

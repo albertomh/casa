@@ -1,10 +1,11 @@
 <details
     class="collapse collapse-arrow bg-base-100 border border-base-300 join-item"
+    data-tray-id="{{ tray_id }}"
     open
 >
     <summary class="collapse-title font-semibold">{{ tray_label }}</summary>
     <div class="collapse-content">
-        <ul id="tray-{{ tray_id }}" class="mb-3">
+        <ul id="tray-{{ tray_id }}" class="mb-3 space-y-2">
             {{ items }}
         </ul>
         <form

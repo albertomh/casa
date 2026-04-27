@@ -135,6 +135,14 @@ export class FreezerRepository {
             )
             .one() as FreezerItem;
     }
+
+    moveItemToTray(itemId: number, trayId: number) {
+        this.sql.exec(
+            `UPDATE freezer__items SET tray_id = ? WHERE id = ?`,
+            trayId,
+            itemId,
+        );
+    }
 }
 
 export class FreezerRenderer {
@@ -166,9 +174,9 @@ export class FreezerRenderer {
     }
 
     trayItem(item: FreezerItem): string {
-        return TrayItemHtml.replace("{{ id }}", this.escape(item.id))
-            .replace("{{ quantity }}", this.escape(item.quantity ?? 1))
-            .replace("{{ name }}", this.escape(item.name));
+        return TrayItemHtml.replaceAll("{{ id }}", this.escape(item.id))
+            .replaceAll("{{ quantity }}", this.escape(item.quantity ?? 1))
+            .replaceAll("{{ name }}", this.escape(item.name));
     }
 
     trayItems(items: FreezerItem[]): string {

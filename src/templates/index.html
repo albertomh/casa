@@ -25,6 +25,56 @@
             transform: translateY(-50%) rotate(225deg);
         }
         </style>
+        <script>
+        document.addEventListener("dragstart", (e) => {
+            const li = e.target.closest("li[data-item-id]");
+            if (!li) return;
+            e.dataTransfer.setData("text/plain", li.dataset.itemId);
+            e.dataTransfer.effectAllowed = "move";
+        });
+
+        document.addEventListener("dragover", (e) => {
+            const zone = e.target.closest("[data-tray-id]");
+            if (!zone) return;
+            e.preventDefault();
+            zone.classList.add(
+                "ring-2",
+                "ring-primary",
+                "ring-inset",
+                "bg-primary/10",
+            );
+        });
+
+        document.addEventListener("dragleave", (e) => {
+            const zone = e.target.closest("[data-tray-id]");
+            if (!zone || zone.contains(e.relatedTarget)) return;
+            zone.classList.remove(
+                "ring-2",
+                "ring-primary",
+                "ring-inset",
+                "bg-primary/10",
+            );
+        });
+
+        document.addEventListener("drop", (e) => {
+            const zone = e.target.closest("[data-tray-id]");
+            if (!zone) return;
+            e.preventDefault();
+            zone.classList.remove(
+                "ring-2",
+                "ring-primary",
+                "ring-inset",
+                "bg-primary/10",
+            );
+            const itemId = e.dataTransfer.getData("text/plain");
+            const trayId = zone.dataset.trayId;
+            htmx.ajax("POST", `/freezers/items/${itemId}/move`, {
+                target: "#trays",
+                swap: "outerHTML",
+                values: { tray_id: trayId },
+            });
+        });
+        </script>
     </head>
 
     <body>

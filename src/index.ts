@@ -94,6 +94,16 @@ export class CasaDurableObject extends DurableObject<Env> {
         });
     }
 
+    async freezer_moveItemToTray(
+        itemId: number,
+        trayId: number,
+    ): Promise<Response> {
+        this.freezer.moveItemToTray(itemId, trayId);
+        const freezer = this.freezer_getActive();
+        if (!freezer) return new Response("Not found", { status: 404 });
+        return this.renderFreezer(freezer.id);
+    }
+
     private renderFreezer(freezerId: number): Response {
         const trays = this.freezer.listTrays(freezerId);
         const items = this.freezer.listItemsByFreezer(freezerId);
@@ -189,6 +199,17 @@ export default {
         );
         if (incrementMatch && request.method === "POST") {
             return stub.freezer_incrementItemCount(Number(incrementMatch[1]));
+        }
+
+        const moveMatch = url.pathname.match(
+            /^\/freezers\/items\/(\d+)\/move$/,
+        );
+        if (moveMatch && request.method === "POST") {
+            const formData = await request.formData();
+            return stub.freezer_moveItemToTray(
+                Number(moveMatch[1]),
+                Number(formData.get("tray_id")),
+            );
         }
 
         return new Response("Not found", { status: 404 });
