@@ -77,7 +77,8 @@ export class FreezerRepository {
                 `SELECT freezer__items.*, freezer__trays.label AS tray_label
                 FROM freezer__items
                 JOIN freezer__trays ON freezer__items.tray_id = freezer__trays.id
-                WHERE freezer__trays.freezer_id = ?`,
+                WHERE freezer__trays.freezer_id = ?
+                ORDER BY freezer__items.id ASC`,
                 freezer_id,
             )
             .toArray() as FreezerItem[];
@@ -153,6 +154,21 @@ export class FreezerRenderer {
             .replaceAll(">", "&gt;");
     }
 
+    humanizeDate(isoUtc: string): string {
+        const date = new Date(isoUtc.replace(" ", "T") + "Z");
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        const diffMonths = Math.floor(diffDays / 30);
+        if (diffMins < 1) return "just now";
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays <= 28) return `${diffDays}d ago`;
+        return `${diffMonths}mo ago`;
+    }
+
     tray(tray: FreezerTray, items: FreezerItem[], index = 0): string {
         const label = "❄️ ".repeat(index + 1);
         const trayItems = items
@@ -160,7 +176,11 @@ export class FreezerRenderer {
             .map((i) =>
                 TrayItemHtml.replaceAll("{{ id }}", this.escape(i.id))
                     .replaceAll("{{ name }}", this.escape(i.name))
-                    .replaceAll("{{ quantity }}", this.escape(i.quantity)),
+                    .replaceAll("{{ quantity }}", this.escape(i.quantity))
+                    .replaceAll(
+                        "{{ added_at }}",
+                        this.humanizeDate(i.added_at),
+                    ),
             )
             .join("");
 
@@ -177,7 +197,8 @@ export class FreezerRenderer {
     trayItem(item: FreezerItem): string {
         return TrayItemHtml.replaceAll("{{ id }}", this.escape(item.id))
             .replaceAll("{{ quantity }}", this.escape(item.quantity ?? 1))
-            .replaceAll("{{ name }}", this.escape(item.name));
+            .replaceAll("{{ name }}", this.escape(item.name))
+            .replaceAll("{{ added_at }}", this.humanizeDate(item.added_at));
     }
 
     trayItems(items: FreezerItem[]): string {

@@ -2,7 +2,8 @@
     id="item-{{ id }}"
     draggable="true"
     data-item-id="{{ id }}"
-    class="flex items-center gap-2"
+    class="grid items-center gap-x-2"
+    style="grid-template-columns: auto auto 1fr;"
 >
     <span class="cursor-grab text-base-content/40 select-none">⠿</span>
     <div class="flex">
@@ -29,5 +30,10 @@
             +
         </button>
     </div>
-    {{ name }}
+    <div class="flex items-baseline gap-2 min-w-0">
+        <span>{{ name }}</span>
+        <span class="text-xs text-base-content/40 whitespace-nowrap pl-2"
+            >{{ added_at }}</span
+        >
+    </div>
 </li>
