@@ -1,1 +1,12 @@
-<li id="item-{{ id }}">({{ quantity }}) {{ name }}</li>
+<li id="item-{{ id }}">
+    <button
+        type="button"
+        hx-post="/freezers/items/{{ id }}/decrement"
+        hx-target="#item-{{ id }}"
+        hx-swap="outerHTML"
+    >
+        -
+    </button>
+    {{ name }}
+    ({{ quantity }})
+</li>

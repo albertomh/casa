@@ -72,6 +72,17 @@ export class CasaDurableObject extends DurableObject<Env> {
         });
     }
 
+    async freezer_decrementItemCount(itemId: number): Promise<Response> {
+        const updated = this.freezer.decrementItemCount(itemId);
+        if (!updated) {
+            return new Response("", {
+                headers: { "Content-Type": "text/html" },
+            });
+        }
+        return new Response(this.freezerRenderer.trayItem(updated), {
+            headers: { "Content-Type": "text/html" },
+        });
+    }
     private renderFreezer(freezerId: number): Response {
         const trays = this.freezer.listTrays(freezerId);
         const items = this.freezer.listItemsByFreezer(freezerId);
@@ -153,6 +164,13 @@ export default {
             const formData = await request.formData();
             const name = formData.get("name");
             return stub.freezer_addItem(name);
+        }
+
+        const decrementMatch = url.pathname.match(
+            /^\/freezers\/items\/(\d+)\/decrement$/,
+        );
+        if (decrementMatch && request.method === "POST") {
+            return stub.freezer_decrementItemCount(Number(decrementMatch[1]));
         }
 
         return new Response("Not found", { status: 404 });

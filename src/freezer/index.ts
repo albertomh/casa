@@ -90,6 +90,32 @@ export class FreezerRepository {
             quantity,
         );
     }
+
+    decrementItemCount(itemId: number): FreezerItem | null {
+        const row = this.sql
+            .exec(
+                `SELECT * FROM freezer__items JOIN freezer__trays ON freezer__items.tray_id = freezer__trays.id WHERE freezer__items.id = ?`,
+                itemId,
+            )
+            .one() as FreezerItem | null;
+        if (!row) return null;
+
+        if (row.quantity <= 1) {
+            this.sql.exec(`DELETE FROM freezer__items WHERE id = ?`, itemId);
+            return null;
+        }
+
+        this.sql.exec(
+            `UPDATE freezer__items SET quantity = quantity - 1 WHERE id = ?`,
+            itemId,
+        );
+        return this.sql
+            .exec(
+                `SELECT freezer__items.*, freezer__trays.label AS tray_label FROM freezer__items JOIN freezer__trays ON freezer__items.tray_id = freezer__trays.id WHERE freezer__items.id = ?`,
+                itemId,
+            )
+            .one() as FreezerItem;
+    }
 }
 
 export class FreezerRenderer {
