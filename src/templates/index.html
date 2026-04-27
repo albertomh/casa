@@ -10,11 +10,10 @@
             crossorigin="anonymous"
         ></script>
     </head>
+
     <body>
-        <h1>Freezer</h1>
-
-        {{ freezer-form }}
-
-        <ul id="list" hx-get="/freezer/items" hx-trigger="load"></ul>
+        <div id="app" hx-get="/ui" hx-trigger="load" hx-target="#app">
+            loading
+        </div>
     </body>
 </html>

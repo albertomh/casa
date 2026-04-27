@@ -1,3 +1,6 @@
+import TrayHtml from "./templates/tray.html";
+import TrayItemHtml from "./templates/tray_item.html";
+
 type Freezer = {
     id: number;
     label: string;
@@ -25,6 +28,19 @@ export class FreezerRepository {
         return this.sql.exec("SELECT * FROM freezers").toArray() as Freezer[];
     }
 
+    getFirstFreezer(): Freezer | null {
+        const rows = this.listFreezers();
+        return rows.length > 0 ? rows[0] : null;
+    }
+
+    getFreezerIdByTray(tray_id: number): number | null {
+        const row = this.sql
+            .exec(`SELECT freezer_id FROM freezer__trays WHERE id = ?`, tray_id)
+            .one() as { freezer_id: number } | null;
+
+        return row?.freezer_id ?? null;
+    }
+
     createFreezer(label: string): number {
         this.sql.exec("INSERT INTO freezers (label) VALUES (?)", [label]);
         return this.sql.exec("SELECT last_insert_rowid() as id").one()
@@ -39,16 +55,18 @@ export class FreezerRepository {
 
     listTrays(freezer_id: number) {
         return this.sql
-            .exec("SELECT * FROM freezer__trays WHERE freezer_id = ?", [
+            .exec(
+                "SELECT * FROM freezer__trays WHERE freezer_id = ?",
                 freezer_id,
-            ])
+            )
             .toArray() as FreezerTray[];
     }
 
     addTray(freezer_id: number, label: string) {
         this.sql.exec(
             "INSERT INTO freezer__trays (freezer_id, label) VALUES (?, ?)",
-            [freezer_id, label],
+            freezer_id,
+            label,
         );
     }
 
@@ -59,7 +77,7 @@ export class FreezerRepository {
                 FROM freezer__items
                 JOIN freezer__trays ON freezer__items.tray_id = freezer__trays.id
                 WHERE freezer__trays.freezer_id = ?`,
-                [freezer_id],
+                freezer_id,
             )
             .toArray() as FreezerItem[];
     }
@@ -67,27 +85,47 @@ export class FreezerRepository {
     addItem(tray_id: number, name: string, quantity = 1) {
         this.sql.exec(
             "INSERT INTO freezer__items (tray_id, name, quantity) VALUES (?, ?, ?)",
-            [tray_id, name, quantity],
+            tray_id,
+            name,
+            quantity,
         );
     }
 }
 
 export class FreezerRenderer {
-    private escape(s: unknown): string {
+    escape(s: unknown): string {
         return String(s)
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;");
     }
 
-    list(items: FreezerItem[]): string {
-        return items
-            .map(
-                (r) => `
-<li id="item-${r.id}">
-  (${r.quantity ?? 1}) ${this.escape(r.name)} [${this.escape(r.added_at)}]
-</li>`,
+    tray(tray: FreezerTray, items: FreezerItem[]): string {
+        const trayItems = items
+            .filter((i) => i.tray_id === tray.id)
+            .map((i) =>
+                TrayItemHtml.replaceAll("{{ id }}", this.escape(i.id))
+                    .replaceAll("{{ name }}", this.escape(i.name))
+                    .replaceAll("{{ quantity }}", this.escape(i.quantity)),
             )
             .join("");
+
+        return TrayHtml.replaceAll("{{ tray_id }}", this.escape(tray.id))
+            .replaceAll("{{ tray_label }}", this.escape(tray.label))
+            .replace("{{ items }}", trayItems);
+    }
+
+    trays(trays: FreezerTray[], items: FreezerItem[]): string {
+        return trays.map((t) => this.tray(t, items)).join("");
+    }
+
+    trayItem(item: FreezerItem): string {
+        return TrayItemHtml.replace("{{ id }}", this.escape(item.id))
+            .replace("{{ quantity }}", this.escape(item.quantity ?? 1))
+            .replace("{{ name }}", this.escape(item.name));
+    }
+
+    trayItems(items: FreezerItem[]): string {
+        return items.map((i) => this.trayItem(i)).join("");
     }
 }

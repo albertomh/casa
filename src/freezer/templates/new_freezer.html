@@ -1,0 +1,12 @@
+<h2>Add freezer</h2>
+
+<form hx-post="/freezers" hx-target="body" hx-swap="innerHTML">
+    <input name="label" placeholder="Freezer label" required>
+    <input
+        name="tray_count"
+        type="number"
+        placeholder="Number of trays"
+        required
+    >
+    <button type="submit">Create</button>
+</form>

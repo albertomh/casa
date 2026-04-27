@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { runMigrations } from "./db";
 import { FreezerRenderer, FreezerRepository } from "./freezer";
-import FreezerFormHtml from "./freezer/templates/form.html";
+import NewFreezerHtml from "./freezer/templates/new_freezer.html";
 import HomepageHtml from "./templates/index.html";
 
 /**
@@ -33,8 +33,22 @@ export class CasaDurableObject extends DurableObject<Env> {
         this.freezerRenderer = new FreezerRenderer();
     }
 
+    private freezer_getActive(): Freezer | null {
+        return this.freezer.getFirstFreezer();
+    }
+
+    async freezer_create(label: string, trayCount: number): Promise<Response> {
+        const id = this.freezer.createFreezer(label);
+        this.freezer.createTraySet(id, trayCount);
+
+        return this.renderFreezer(id);
+    }
+
     async freezer_getItems(): Promise<Response> {
-        const items = this.freezer.listItemsByFreezer(1); // Replace 1 with the actual freezer ID
+        const freezer = this.freezer_getActive();
+        if (!freezer) throw new Error("no freezer");
+
+        const items = this.freezer.listItemsByFreezer(freezer.id);
         const listHtml = this.freezerRenderer.list(items);
 
         return new Response(listHtml, {
@@ -42,14 +56,43 @@ export class CasaDurableObject extends DurableObject<Env> {
         });
     }
 
-    async freezer_addItem(name: string): Promise<Response> {
-        this.freezer.addItem(1, name); // Replace 1 with the actual tray ID
-        const items = this.freezer.listItemsByFreezer(1); // Replace 1 with the actual freezer ID
-        const listHtml = this.freezerRenderer.list(items);
+    async freezer_addItem(trayId: number, name: string): Promise<Response> {
+        this.freezer.addItem(trayId, name);
 
-        return new Response(listHtml + FreezerFormHtml, {
+        const freezerId = this.freezer.getFreezerIdByTray(trayId);
+        if (!freezerId) {
+            return new Response("Tray not found", { status: 404 });
+        }
+
+        const items = this.freezer.listItemsByFreezer(freezerId);
+        const trayItems = items.filter((i) => i.tray_id === trayId);
+
+        return new Response(this.freezerRenderer.trayItems(trayItems), {
             headers: { "Content-Type": "text/html" },
         });
+    }
+
+    private renderFreezer(freezerId: number): Response {
+        const trays = this.freezer.listTrays(freezerId);
+        const items = this.freezer.listItemsByFreezer(freezerId);
+
+        const html = this.freezerRenderer.trays(trays, items);
+
+        return new Response(html, {
+            headers: { "Content-Type": "text/html" },
+        });
+    }
+
+    async ui(): Promise<Response> {
+        const freezer = this.freezer_getActive();
+
+        if (!freezer) {
+            return new Response(NewFreezerHtml, {
+                headers: { "Content-Type": "text/html" },
+            });
+        }
+
+        return this.renderFreezer(freezer.id);
     }
 }
 
@@ -73,20 +116,40 @@ export default {
         const stub = env.CASA_DURABLE_OBJECT.getByName(DURABLE_OBJECT_NAME);
 
         if (url.pathname === "/") {
-            const html = (HomepageHtml as string).replace(
-                "{{ freezer-form }}",
-                FreezerFormHtml,
-            );
-            return new Response(html, {
+            return new Response(HomepageHtml, {
                 headers: { "Content-Type": "text/html" },
             });
         }
 
-        if (url.pathname === "/freezer/items" && request.method === "GET") {
+        if (url.pathname === "/ui") {
+            return stub.ui();
+        }
+
+        if (url.pathname === "/freezers" && request.method === "POST") {
+            const form = await request.formData();
+            return stub.freezer_create(
+                String(form.get("label")),
+                Number(form.get("tray_count")),
+            );
+        }
+
+        if (
+            url.pathname.startsWith("/freezers/trays/") &&
+            request.method === "POST"
+        ) {
+            const trayId = Number(url.pathname.split("/")[3]);
+
+            const formData = await request.formData();
+            const name = String(formData.get("name"));
+
+            return stub.freezer_addItem(trayId, name);
+        }
+
+        if (url.pathname === "/freezers/items" && request.method === "GET") {
             return stub.freezer_getItems();
         }
 
-        if (url.pathname === "/freezer/items" && request.method === "POST") {
+        if (url.pathname === "/freezers/items" && request.method === "POST") {
             const formData = await request.formData();
             const name = formData.get("name");
             return stub.freezer_addItem(name);

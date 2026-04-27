@@ -1,0 +1,14 @@
+<h3>{{ tray_label }}</h3>
+
+<ul id="tray-{{ tray_id }}">
+    {{ items }}
+</ul>
+
+<form
+    hx-post="/freezers/trays/{{ tray_id }}/items"
+    hx-target="#tray-{{ tray_id }}"
+    hx-swap="innerHTML"
+>
+    <input name="name" placeholder="Add item">
+    <button type="submit">Add</button>
+</form>
