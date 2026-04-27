@@ -1,8 +1,14 @@
+type Freezer = {
+    id: number;
+    label: string;
+};
+
 type FreezerTray = {
     id: number;
     freezer_id: number;
     label: string;
 };
+
 type FreezerItem = {
     id: number;
     tray_id: number;
@@ -42,10 +48,10 @@ export class FreezerRepository {
             .toArray() as FreezerItem[];
     }
 
-    addItem(tray_id: number, name: string) {
+    addItem(tray_id: number, name: string, quantity = 1) {
         this.sql.exec(
-            "INSERT INTO freezer__items (tray_id, name, quantity) VALUES (?, ?, 1)",
-            [tray_id, name],
+            "INSERT INTO freezer__items (tray_id, name, quantity) VALUES (?, ?, ?)",
+            [tray_id, name, quantity],
         );
     }
 }

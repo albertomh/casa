@@ -1,6 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { runMigrations } from "./db";
-import { Freezer, FreezerRenderer } from "./freezer";
+import { FreezerRenderer, FreezerRepository } from "./freezer";
 import FreezerFormHtml from "./freezer/templates/form.html";
 import HomepageHtml from "./templates/index.html";
 
@@ -20,7 +20,7 @@ import HomepageHtml from "./templates/index.html";
 const DURABLE_OBJECT_NAME = "casa";
 
 export class CasaDurableObject extends DurableObject<Env> {
-    freezer: Freezer;
+    freezer: FreezerRepository;
     freezerRenderer: FreezerRenderer;
 
     constructor(ctx: DurableObjectState, env: Env) {
@@ -29,12 +29,12 @@ export class CasaDurableObject extends DurableObject<Env> {
         const sql = ctx.storage.sql;
         ctx.blockConcurrencyWhile(async () => runMigrations(ctx.storage.sql));
 
-        this.freezer = new Freezer(sql);
+        this.freezer = new FreezerRepository(sql);
         this.freezerRenderer = new FreezerRenderer();
     }
 
     async freezer_getItems(): Promise<Response> {
-        const items = this.freezer.listItems();
+        const items = this.freezer.listItemsByFreezer(1); // Replace 1 with the actual freezer ID
         const listHtml = this.freezerRenderer.list(items);
 
         return new Response(listHtml, {
@@ -43,8 +43,8 @@ export class CasaDurableObject extends DurableObject<Env> {
     }
 
     async freezer_addItem(name: string): Promise<Response> {
-        this.freezer.addItem(name);
-        const items = this.freezer.listItems();
+        this.freezer.addItem(1, name); // Replace 1 with the actual tray ID
+        const items = this.freezer.listItemsByFreezer(1); // Replace 1 with the actual freezer ID
         const listHtml = this.freezerRenderer.list(items);
 
         return new Response(listHtml + FreezerFormHtml, {
