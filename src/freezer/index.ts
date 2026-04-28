@@ -157,11 +157,13 @@ export class FreezerRenderer {
     humanizeDate(isoUtc: string): string {
         const date = new Date(isoUtc.replace(" ", "T") + "Z");
         const now = new Date();
+
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMins / 60);
         const diffDays = Math.floor(diffHours / 24);
         const diffMonths = Math.floor(diffDays / 30);
+
         if (diffMins < 1) return "just now";
         if (diffMins < 60) return `${diffMins}m ago`;
         if (diffHours < 24) return `${diffHours}h ago`;
@@ -177,10 +179,8 @@ export class FreezerRenderer {
                 TrayItemHtml.replaceAll("{{ id }}", this.escape(i.id))
                     .replaceAll("{{ name }}", this.escape(i.name))
                     .replaceAll("{{ quantity }}", this.escape(i.quantity))
-                    .replaceAll(
-                        "{{ added_at }}",
-                        this.humanizeDate(i.added_at),
-                    ),
+                    .replaceAll("{{ added_at }}", this.humanizeDate(i.added_at))
+                    .replaceAll("{{ added_at_iso }}", this.escape(i.added_at)),
             )
             .join("");
 
@@ -198,7 +198,8 @@ export class FreezerRenderer {
         return TrayItemHtml.replaceAll("{{ id }}", this.escape(item.id))
             .replaceAll("{{ quantity }}", this.escape(item.quantity ?? 1))
             .replaceAll("{{ name }}", this.escape(item.name))
-            .replaceAll("{{ added_at }}", this.humanizeDate(item.added_at));
+            .replaceAll("{{ added_at }}", this.humanizeDate(item.added_at))
+            .replaceAll("{{ added_at_iso }}", this.escape(item.added_at));
     }
 
     trayItems(items: FreezerItem[]): string {

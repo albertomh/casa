@@ -76,6 +76,21 @@
             });
         });
 
+        document.addEventListener("DOMContentLoaded", () => {
+            document
+                .getElementById("ts-toggle")
+                .addEventListener("click", (e) => {
+                    const btn = e.currentTarget;
+                    const curShowingIso = btn.textContent.trim() === "show date 🗓️";
+                    btn.textContent = curShowingIso ? "show time since ⏳" : "show date 🗓️";
+                    document.querySelectorAll(".js-timestamp").forEach((el) => {
+                        el.textContent = curShowingIso
+                            ? el.dataset.iso.split(" ")[0]
+                            : el.dataset.humanized;
+                    });
+                });
+        });
+
         document.addEventListener("submit", (e) => {
             if (e.target.tagName === "FORM") e.target.reset();
         });
@@ -88,6 +103,20 @@
     </head>
 
     <body>
+        <header
+            class="flex items-center justify-end px-4 py-1 bg-base-200/60 border-b border-base-300 text-sm"
+        >
+            <h1 class="tiny5-regular font-mono text-lg text-info">FREEZER</h1>
+            <div class="flex items-center">
+                <button
+                    type="button"
+                    id="ts-toggle"
+                    class="btn btn-xs font-mono"
+                >
+                    show date 🗓️
+                </button>
+            </div>
+        </header>
         <div id="app" hx-get="/ui" hx-trigger="load" hx-target="#app">
             loading
         </div>
