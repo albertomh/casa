@@ -128,6 +128,13 @@ export class CasaDurableObject extends DurableObject<Env> {
     }
 }
 
+function isFromAllowedCountry(request: Request): boolean {
+    const allowedCountries = ["GB"];
+    // <https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties>
+    const country = request.cf?.country;
+    return !!country && allowedCountries.includes(country);
+}
+
 export default {
     /**
      * This is the standard fetch handler for a Cloudflare Worker
@@ -138,6 +145,10 @@ export default {
      * @returns The response to be sent back to the client
      */
     async fetch(request, env, _ctx): Promise<Response> {
+        if (!isFromAllowedCountry(request)) {
+            return new Response("Forbidden", { status: 403 });
+        }
+
         const url = new URL(request.url);
 
         // Create a stub to open a communication channel with the Durable Object

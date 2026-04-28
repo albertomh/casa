@@ -26,3 +26,11 @@ Then test locally:
 # initial code generated with:
 pnpm create cloudflare@latest durable-object-starter
 ```
+
+## Deploy
+
+Deploy to Cloudflare:
+
+```sh
+pnpm run deploy
+```
