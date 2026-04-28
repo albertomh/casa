@@ -21,7 +21,19 @@
             src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"
         ></script>
 
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap"
+            rel="stylesheet"
+        >
+
         <style>
+        .tiny5-regular {
+            font-family: "Tiny5", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+        }
         details.collapse-arrow[open] > .collapse-title::after {
             transform: translateY(-50%) rotate(225deg);
         }
@@ -104,7 +116,7 @@
 
     <body>
         <header
-            class="flex items-center justify-end px-4 py-1 bg-base-200/60 border-b border-base-300 text-sm"
+            class="flex items-center justify-between px-4 py-1 bg-base-200/60 border-b border-base-300 text-sm"
         >
             <h1 class="tiny5-regular font-mono text-lg text-info">FREEZER</h1>
             <div class="flex items-center">
