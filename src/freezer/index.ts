@@ -171,17 +171,20 @@ export class FreezerRenderer {
         return `${diffMonths}mo ago`;
     }
 
+    trayItemStyle(isoUtc: string): string {
+        const date = new Date(`${isoUtc.replace(" ", "T")}Z`);
+        const diffDays = (Date.now() - date.getTime()) / 86400000;
+
+        if (diffDays >= 90) return "text-red-700";
+        if (diffDays >= 60) return "text-orange-500";
+        return "";
+    }
+
     tray(tray: FreezerTray, items: FreezerItem[], index = 0): string {
         const label = "❄️ ".repeat(index + 1);
         const trayItems = items
             .filter((i) => i.tray_id === tray.id)
-            .map((i) =>
-                TrayItemHtml.replaceAll("{{ id }}", this.escape(i.id))
-                    .replaceAll("{{ name }}", this.escape(i.name))
-                    .replaceAll("{{ quantity }}", this.escape(i.quantity))
-                    .replaceAll("{{ added_at }}", this.humanizeDate(i.added_at))
-                    .replaceAll("{{ added_at_iso }}", this.escape(i.added_at)),
-            )
+            .map((i) => this.trayItem(i))
             .join("");
 
         return TrayHtml.replaceAll("{{ tray_id }}", this.escape(tray.id))
@@ -199,7 +202,11 @@ export class FreezerRenderer {
             .replaceAll("{{ quantity }}", this.escape(item.quantity ?? 1))
             .replaceAll("{{ name }}", this.escape(item.name))
             .replaceAll("{{ added_at }}", this.humanizeDate(item.added_at))
-            .replaceAll("{{ added_at_iso }}", this.escape(item.added_at));
+            .replaceAll("{{ added_at_iso }}", this.escape(item.added_at))
+            .replaceAll(
+                "{{ tray_item_style }}",
+                this.trayItemStyle(item.added_at),
+            );
     }
 
     trayItems(items: FreezerItem[]): string {
