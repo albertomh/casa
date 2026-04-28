@@ -39,6 +39,27 @@
         }
         </style>
         <script>
+        const dragCounters = new WeakMap();
+
+        function getHighlightTargets(zone) {
+            return [zone, zone.querySelector("summary")].filter(Boolean);
+        }
+        function highlight(zone) {
+            getHighlightTargets(zone).forEach((el) => {
+                el.classList.add("bg-info/20");
+            });
+            zone.querySelector("summary")?.style.setProperty(
+                "background",
+                "oklch(var(--p) / 0.2)",
+            );
+        }
+
+        function unhighlight(zone) {
+            getHighlightTargets(zone).forEach((el) => {
+                el.classList.remove("bg-info/20");
+            });
+            zone.querySelector("summary")?.style.removeProperty("background");
+        }
         document.addEventListener("dragstart", (e) => {
             const li = e.target.closest("li[data-item-id]");
             if (!li) return;
@@ -46,39 +67,32 @@
             e.dataTransfer.effectAllowed = "move";
         });
 
-        document.addEventListener("dragover", (e) => {
+        document.addEventListener("dragenter", (e) => {
             const zone = e.target.closest("[data-tray-id]");
             if (!zone) return;
-            e.preventDefault();
-            zone.classList.add(
-                "ring-2",
-                "ring-primary",
-                "ring-inset",
-                "bg-primary/10",
-            );
+            const count = (dragCounters.get(zone) ?? 0) + 1;
+            dragCounters.set(zone, count);
+            if (count === 1) highlight(zone);
+        });
+
+        document.addEventListener("dragover", (e) => {
+            if (e.target.closest("[data-tray-id]")) e.preventDefault();
         });
 
         document.addEventListener("dragleave", (e) => {
             const zone = e.target.closest("[data-tray-id]");
-            if (!zone || zone.contains(e.relatedTarget)) return;
-            zone.classList.remove(
-                "ring-2",
-                "ring-primary",
-                "ring-inset",
-                "bg-primary/10",
-            );
+            if (!zone) return;
+            const count = (dragCounters.get(zone) ?? 1) - 1;
+            dragCounters.set(zone, count);
+            if (count === 0) unhighlight(zone);
         });
 
         document.addEventListener("drop", (e) => {
             const zone = e.target.closest("[data-tray-id]");
             if (!zone) return;
             e.preventDefault();
-            zone.classList.remove(
-                "ring-2",
-                "ring-primary",
-                "ring-inset",
-                "bg-primary/10",
-            );
+            dragCounters.set(zone, 0);
+            unhighlight(zone);
             const itemId = e.dataTransfer.getData("text/plain");
             const trayId = zone.dataset.trayId;
             htmx.ajax("POST", `/freezers/items/${itemId}/move`, {
@@ -114,7 +128,7 @@
         </script>
     </head>
 
-    <body>
+    <body class="select-none">
         <header
             class="flex items-center justify-between px-4 py-1 bg-base-200/60 border-b border-base-300 text-sm"
         >
