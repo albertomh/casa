@@ -3,7 +3,12 @@
     data-tray-id="{{ tray_id }}"
     open
 >
-    <summary class="collapse-title font-semibold">{{ tray_label }}</summary>
+    <summary
+        class="collapse-title font-semibold"
+        style="background: linear-gradient(to bottom, #d5d7db, #ffffff);"
+    >
+        {{ tray_label }}
+    </summary>
     <div class="collapse-content">
         <ul id="tray-{{ tray_id }}" class="mb-3 space-y-2">
             {{ items }}
