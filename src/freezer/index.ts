@@ -78,7 +78,7 @@ export class FreezerRepository {
                 FROM freezer__items
                 JOIN freezer__trays ON freezer__items.tray_id = freezer__trays.id
                 WHERE freezer__trays.freezer_id = ?
-                ORDER BY freezer__items.id ASC`,
+                ORDER BY freezer__items.added_at ASC`,
                 freezer_id,
             )
             .toArray() as FreezerItem[];

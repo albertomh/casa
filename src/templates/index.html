@@ -107,8 +107,11 @@
                 .getElementById("ts-toggle")
                 .addEventListener("click", (e) => {
                     const btn = e.currentTarget;
-                    const curShowingIso = btn.textContent.trim() === "show date 🗓️";
-                    btn.textContent = curShowingIso ? "show time since ⏳" : "show date 🗓️";
+                    const curShowingIso =
+                        btn.textContent.trim() === "show date 🗓️";
+                    btn.textContent = curShowingIso
+                        ? "show time since ⏳"
+                        : "show date 🗓️";
                     document.querySelectorAll(".js-timestamp").forEach((el) => {
                         el.textContent = curShowingIso
                             ? el.dataset.iso.split(" ")[0]
