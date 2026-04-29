@@ -2,7 +2,7 @@ import AllTraysHtml from "./templates/all_trays.html";
 import TrayHtml from "./templates/tray.html";
 import TrayItemHtml from "./templates/tray_item.html";
 
-type Freezer = {
+export type Freezer = {
     id: number;
     label: string;
 };
