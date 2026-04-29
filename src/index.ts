@@ -3,7 +3,9 @@ import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
 import { runMigrations } from "./db";
 import { type Freezer, FreezerRenderer, FreezerRepository } from "./freezer";
 import NewFreezerHtml from "./freezer/templates/new_freezer.html";
-import HomepageHtml from "./templates/index.html";
+import FreezerHtml from "./templates/freezer.html";
+import HomeHtml from "./templates/home.html";
+import HomeContentHtml from "./templates/home_content.html";
 
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
@@ -116,7 +118,7 @@ export class CasaDurableObject extends DurableObject<Env> {
         });
     }
 
-    async ui(): Promise<Response> {
+    async freezerUi(): Promise<Response> {
         const freezer = this.freezer_getActive();
 
         if (!freezer) {
@@ -161,14 +163,34 @@ export default {
         // will go to a single remote Durable Object instance.
         const stub = env.CASA_DURABLE_OBJECT.getByName(DURABLE_OBJECT_NAME);
 
+        const isHtmx = request.headers.get("HX-Request") === "true";
+        const htmlShell = (content: string) =>
+            HomeHtml.replace("<!--CONTENT-->", content);
+
         if (url.pathname === "/") {
-            return new Response(HomepageHtml, {
+            if (isHtmx) {
+                return new Response(HomeContentHtml, {
+                    headers: { "Content-Type": "text/html" },
+                });
+            }
+            return new Response(htmlShell(HomeContentHtml), {
                 headers: { "Content-Type": "text/html" },
             });
         }
 
-        if (url.pathname === "/ui") {
-            return stub.ui();
+        if (url.pathname === "/freezer") {
+            if (isHtmx) {
+                return new Response(FreezerHtml, {
+                    headers: { "Content-Type": "text/html" },
+                });
+            }
+            return new Response(htmlShell(FreezerHtml), {
+                headers: { "Content-Type": "text/html" },
+            });
+        }
+
+        if (url.pathname === "/freezerUi") {
+            return stub.freezerUi();
         }
 
         if (url.pathname === "/freezers" && request.method === "POST") {
