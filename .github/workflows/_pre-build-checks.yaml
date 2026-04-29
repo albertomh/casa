@@ -1,0 +1,33 @@
+# Usage:
+# ```
+# jobs:
+#   checks:
+#     uses: ./.github/workflows/_pre-build-checks.yaml
+# ```
+name: Pre-build checks
+
+on:
+  workflow_call:
+
+jobs:
+  pre_commit:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/prek
+
+  typecheck:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        shell: bash
+      - run: pnpm typecheck
+        shell: bash
