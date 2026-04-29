@@ -1,0 +1,9 @@
+{
+    "changelog-type": "default",
+    "packages": {
+        ".": {}
+    },
+    "plugins": ["sentence-case"],
+    "release-as": "1.0.0",
+    "release-type": "node"
+}
