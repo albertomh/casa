@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
+import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
 import { runMigrations } from "./db";
-import { FreezerRenderer, FreezerRepository } from "./freezer";
+import { type Freezer, FreezerRenderer, FreezerRepository } from "./freezer";
 import NewFreezerHtml from "./freezer/templates/new_freezer.html";
 import HomepageHtml from "./templates/index.html";
 
@@ -49,7 +50,7 @@ export class CasaDurableObject extends DurableObject<Env> {
         if (!freezer) throw new Error("no freezer");
 
         const items = this.freezer.listItemsByFreezer(freezer.id);
-        const listHtml = this.freezerRenderer.list(items);
+        const listHtml = this.freezerRenderer.trayItems(items);
 
         return new Response(listHtml, {
             headers: { "Content-Type": "text/html" },
@@ -128,7 +129,9 @@ export class CasaDurableObject extends DurableObject<Env> {
     }
 }
 
-function isFromAllowedCountry(request: Request): boolean {
+function isFromAllowedCountry(
+    request: Request & { cf?: IncomingRequestCfProperties },
+): boolean {
     const allowedCountries = ["GB"];
     // <https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties>
     const country = request.cf?.country;
@@ -186,16 +189,6 @@ export default {
             const name = String(formData.get("name"));
 
             return stub.freezer_addItem(trayId, name);
-        }
-
-        if (url.pathname === "/freezers/items" && request.method === "GET") {
-            return stub.freezer_getItems();
-        }
-
-        if (url.pathname === "/freezers/items" && request.method === "POST") {
-            const formData = await request.formData();
-            const name = formData.get("name");
-            return stub.freezer_addItem(name);
         }
 
         const decrementMatch = url.pathname.match(
