@@ -9,7 +9,7 @@
 Run the worker locally using Wrangler via pnpm:
 
 ```sh
-pnpm install
+pnpm install --no-optional=false
 pnpm run dev
 ```
 
