@@ -172,7 +172,10 @@ export default {
 
         const isHtmx = request.headers.get("HX-Request") === "true";
         const htmlShell = (content: string) =>
-            HomeHtml.replace("<!--CONTENT-->", content);
+            HomeHtml.replace("<!--HOME_ADDRESS-->", env.HOME_ADDRESS).replace(
+                "<!--CONTENT-->",
+                content,
+            );
 
         if (url.pathname === "/") {
             if (isHtmx) {

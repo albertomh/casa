@@ -21,6 +21,11 @@
             }
         ]
     },
+
+  "secrets": {
+    "required": ["HOME_ADDRESS"],
+  },
+
     "observability": {
         "enabled": true
     },
