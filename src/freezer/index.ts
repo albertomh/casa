@@ -28,7 +28,9 @@ export class FreezerRepository {
     constructor(private sql: SqlStorage) {}
 
     listFreezers(): Freezer[] {
-        return this.sql.exec("SELECT * FROM freezers").toArray() as Freezer[];
+        return this.sql
+            .exec("SELECT * FROM freezer__freezers")
+            .toArray() as Freezer[];
     }
 
     getFirstFreezer(): Freezer | null {
@@ -45,7 +47,9 @@ export class FreezerRepository {
     }
 
     createFreezer(label: string): number {
-        this.sql.exec("INSERT INTO freezers (label) VALUES (?)", [label]);
+        this.sql.exec("INSERT INTO freezer__freezers (label) VALUES (?)", [
+            label,
+        ]);
         return this.sql.exec("SELECT last_insert_rowid() as id").one()
             .id as number;
     }
