@@ -16,6 +16,12 @@
             rel="stylesheet"
             type="text/css"
         >
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13/font/bootstrap-icons.min.css"
+            integrity="sha256-pdY4ejLKO67E0CM2tbPtq1DJ3VGDVVdqAR6j3ZwdiE4="
+            crossorigin="anonymous"
+        >
 
         <script
             src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"
@@ -27,6 +33,51 @@
             href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap"
             rel="stylesheet"
         >
+        <link
+            href="https://fonts.googleapis.com/css2?family=Luxurious+Script&display=swap"
+            rel="stylesheet"
+        >
+
+        <style>
+        .global-header {
+            color: #ffd51d;
+            background-color: #005838;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .global-header a {
+            text-decoration: none;
+        }
+        .global-header h1 {
+            margin: 0;
+            font-family: "Luxurious Script", cursive;
+            font-weight: 400;
+            font-size: 1.5rem;
+        }
+        .global-header h1 i {
+            font-size: 1.15rem;
+        }
+        .icon-italic {
+            display: inline-block;
+            transform: skewX(-22deg);
+        }
+        </style>
+        <style id="applet-styles"></style>
     </head>
-    <body class="select-none"><!--CONTENT--></body>
+    <body>
+        <header
+            class="flex items-center justify-between px-4 py-1 bg-white text-sm global-header"
+        >
+            <!-- biome-ignore lint/a11y/useAnchorContent: header logo link -->
+            <a href="/">
+                <h1>
+                    <span class="icon-italic"
+                        ><i class="bi bi-house-heart"></i></span
+                    >
+                    Home address
+                </h1>
+            </a>
+        </header>
+        <main id="applet"><!--CONTENT--></main>
+        <script id="applet-scripts"></script>
+    </body>
 </html>
