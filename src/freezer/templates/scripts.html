@@ -74,6 +74,41 @@ document.addEventListener("drop", (e) => {
     });
 });
 
+// When decrementing from 1, show delete confirmation first
+const _decrementDeleteTimers = new Map();
+function _revertDecrementBtn(btn) {
+    btn.innerHTML = "-";
+}
+document.addEventListener(
+    "click",
+    (e) => {
+        const btn = e.target.closest(".js-decrement-btn");
+        if (!btn) return;
+        const li = btn.closest("li[data-item-id]");
+        if (!li) return;
+        if (li.dataset.pendingDelete === "true") {
+            // Second click — confirmed; clear state and let HTMX fire
+            li.dataset.pendingDelete = "false";
+            clearTimeout(_decrementDeleteTimers.get(li));
+            _decrementDeleteTimers.delete(li);
+            _revertDecrementBtn(btn);
+            return;
+        }
+        if (parseInt(li.dataset.qty ?? "0", 10) !== 1) return;
+        // qty === 1: enter pending-delete state — stop propagation so HTMX never fires
+        e.stopPropagation();
+        li.dataset.pendingDelete = "true";
+        btn.innerHTML = '<i class="bi bi-trash3-fill text-red-600"></i>';
+        const timer = setTimeout(() => {
+            li.dataset.pendingDelete = "false";
+            _revertDecrementBtn(btn);
+            _decrementDeleteTimers.delete(li);
+        }, 5000);
+        _decrementDeleteTimers.set(li, timer);
+    },
+    true,
+);
+
 document.addEventListener("submit", (e) => {
     if (e.target.tagName === "FORM") e.target.reset();
 });
