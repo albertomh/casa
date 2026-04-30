@@ -1,6 +1,8 @@
-import AllTraysHtml from "./templates/all_trays.html";
+import HeaderHtml from "./templates/header.html";
+import ScriptsHtml from "./templates/scripts.html";
 import TrayHtml from "./templates/tray.html";
 import TrayItemHtml from "./templates/tray_item.html";
+import AllTraysHtml from "./templates/trays_all.html";
 
 export type Freezer = {
     id: number;
@@ -169,6 +171,14 @@ export class FreezerRenderer {
         if (diffHours < 24) return `${diffHours}h ago`;
         if (diffDays <= 28) return `${diffDays}d ago`;
         return `${diffMonths}mo ago`;
+    }
+
+    scripts(): string {
+        return ScriptsHtml;
+    }
+
+    header(): string {
+        return HeaderHtml;
     }
 
     trayItemStyle(isoUtc: string): string {

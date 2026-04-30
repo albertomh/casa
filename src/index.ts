@@ -104,14 +104,21 @@ export class CasaDurableObject extends DurableObject<Env> {
         this.freezer.moveItemToTray(itemId, trayId);
         const freezer = this.freezer_getActive();
         if (!freezer) return new Response("Not found", { status: 404 });
-        return this.renderFreezer(freezer.id);
+        return new Response(this.renderTrays(freezer.id), {
+            headers: { "Content-Type": "text/html" },
+        });
     }
 
-    private renderFreezer(freezerId: number): Response {
+    private renderTrays(freezerId: number): string {
         const trays = this.freezer.listTrays(freezerId);
         const items = this.freezer.listItemsByFreezer(freezerId);
-
-        const html = this.freezerRenderer.trays(trays, items);
+        return this.freezerRenderer.trays(trays, items);
+    }
+    private renderFreezer(freezerId: number): Response {
+        const html =
+            this.freezerRenderer.scripts() +
+            this.freezerRenderer.header() +
+            this.renderTrays(freezerId);
 
         return new Response(html, {
             headers: { "Content-Type": "text/html" },
