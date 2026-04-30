@@ -37,9 +37,15 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
-      # Update pnpm-lock.yaml only if release-please created or updated a Pull Request.
-      # Otherwise the 'checkout' step fails because the 'release-...' branch does not exist.
-      # Avoids attempting a pnpm-lock.yaml update immediately after a release-please PR is merged.
+
+  # Update pnpm-lock.yaml only if release-please created or updated a Pull Request.
+  # Otherwise the 'checkout' step fails because the 'release-...' branch does not exist.
+  # Avoids attempting a pnpm-lock.yaml update immediately after a release-please PR is merged.
+  update-lockfile:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.prs_created == 'true' }}
+    runs-on: ubuntu-slim
+    steps:
       - uses: actions/checkout@v6
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         with:
