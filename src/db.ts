@@ -4,7 +4,7 @@ const MIGRATIONS = [
         sql: `
             CREATE TABLE IF NOT EXISTS freezer__items(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
+                name TEXT NOT NULL CHECK(LENGTH(TRIM(name)) > 0),
                 quantity INTEGER,
                 added_at TEXT NOT NULL DEFAULT (datetime('now'))
             );

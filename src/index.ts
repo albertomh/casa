@@ -218,7 +218,10 @@ export default {
             const trayId = Number(url.pathname.split("/")[3]);
 
             const formData = await request.formData();
-            const name = String(formData.get("name"));
+            const name = String(formData.get("name")).trim();
+            if (!name) {
+                return new Response("Item name is required", { status: 422 });
+            }
 
             return stub.freezer_addItem(trayId, name);
         }
