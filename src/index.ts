@@ -149,6 +149,12 @@ function isFromAllowedCountry(
     return !!country && allowedCountries.includes(country);
 }
 
+async function botHoneypot(form: FormData): Promise<Response | void> {
+    if (form.get("_email")) {
+        return new Response("Bad request", { status: 400 });
+    }
+}
+
 export default {
     /**
      * This is the standard fetch handler for a Cloudflare Worker
@@ -231,8 +237,8 @@ export default {
         ) {
             const trayId = Number(url.pathname.split("/")[3]);
 
-            const formData = await request.formData();
-            const name = String(formData.get("name")).trim();
+            const form = await request.formData();
+            const name = String(form.get("name")).trim();
             if (!name) {
                 return new Response("Item name is required", { status: 422 });
             }
@@ -244,6 +250,8 @@ export default {
             /^\/freezers\/items\/(\d+)\/decrement$/,
         );
         if (decrementMatch && request.method === "POST") {
+            const form = await request.formData();
+            await botHoneypot(form);
             return stub.freezer_decrementItemCount(Number(decrementMatch[1]));
         }
 
@@ -251,6 +259,8 @@ export default {
             /^\/freezers\/items\/(\d+)\/increment$/,
         );
         if (incrementMatch && request.method === "POST") {
+            const form = await request.formData();
+            await botHoneypot(form);
             return stub.freezer_incrementItemCount(Number(incrementMatch[1]));
         }
 
@@ -258,10 +268,11 @@ export default {
             /^\/freezers\/items\/(\d+)\/move$/,
         );
         if (moveMatch && request.method === "POST") {
-            const formData = await request.formData();
+            const form = await request.formData();
+            await botHoneypot(form);
             return stub.freezer_moveItemToTray(
                 Number(moveMatch[1]),
-                Number(formData.get("tray_id")),
+                Number(form.get("tray_id")),
             );
         }
 
