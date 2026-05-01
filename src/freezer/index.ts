@@ -195,7 +195,9 @@ export class FreezerRenderer {
     }
 
     tray(tray: FreezerTray, items: FreezerItem[], index = 0): string {
-        const label = "❄️ ".repeat(index + 1);
+        const label = `<i class="bi bi-snow pe-1 text-info"></i>`.repeat(
+            index + 1,
+        );
         const trayItems = items
             .filter((i) => i.tray_id === tray.id)
             .map((i) => this.trayItem(i))
@@ -212,15 +214,18 @@ export class FreezerRenderer {
     }
 
     trayItem(item: FreezerItem): string {
-        return TrayItemHtml.replaceAll("{{ id }}", this.escape(item.id))
-            .replaceAll("{{ quantity }}", this.escape(item.quantity ?? 1))
-            .replaceAll("{{ name }}", this.escape(item.name))
-            .replaceAll("{{ added_at }}", this.humanizeDate(item.added_at))
-            .replaceAll("{{ added_at_iso }}", this.escape(item.added_at))
-            .replaceAll(
-                "{{ tray_item_style }}",
-                this.trayItemStyle(item.added_at),
-            );
+        const values: Record<string, string> = {
+            "{{ id }}": this.escape(item.id),
+            "{{ quantity }}": this.escape(item.quantity ?? 1),
+            "{{ name }}": this.escape(item.name),
+            "{{ added_at }}": this.humanizeDate(item.added_at),
+            "{{ added_at_iso }}": this.escape(item.added_at),
+            "{{ tray_item_style }}": this.trayItemStyle(item.added_at),
+        };
+        return TrayItemHtml.replace(
+            /\{\{ [\w]+ \}\}/g,
+            (match: string) => values[match] ?? match,
+        );
     }
 
     trayItems(items: FreezerItem[]): string {
