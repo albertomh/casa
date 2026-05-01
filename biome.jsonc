@@ -18,5 +18,8 @@
         "rules": {
             "recommended": true
         }
+    },
+    "files": {
+        "includes": ["**", "!src/templates/qr.html"]
     }
 }

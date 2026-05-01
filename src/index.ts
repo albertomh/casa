@@ -6,6 +6,7 @@ import NewFreezerHtml from "./freezer/templates/new_freezer.html";
 import FreezerHtml from "./templates/freezer.html";
 import HomeHtml from "./templates/home.html";
 import HomeContentHtml from "./templates/home_content.html";
+import FreezerQrHtml from "./templates/qr.html";
 
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
@@ -195,6 +196,14 @@ export default {
                 });
             }
             return new Response(htmlShell(HomeContentHtml), {
+                headers: { "Content-Type": "text/html" },
+            });
+        }
+
+        if (url.pathname === "/freezer/qr") {
+            const qrUrl = `${url.origin}/freezer`;
+            const html = FreezerQrHtml.replaceAll("<!--QR_URL-->", qrUrl);
+            return new Response(html, {
                 headers: { "Content-Type": "text/html" },
             });
         }
