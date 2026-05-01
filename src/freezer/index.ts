@@ -195,7 +195,9 @@ export class FreezerRenderer {
     }
 
     tray(tray: FreezerTray, items: FreezerItem[], index = 0): string {
-        const label = "❄️ ".repeat(index + 1);
+        const label = `<i class="bi bi-snow pe-1 text-info"></i>`.repeat(
+            index + 1,
+        );
         const trayItems = items
             .filter((i) => i.tray_id === tray.id)
             .map((i) => this.trayItem(i))
