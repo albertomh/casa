@@ -13,6 +13,7 @@
             hx-post="/freezers/items/{{ id }}/decrement"
             hx-target="#item-{{ id }}"
             hx-swap="outerHTML"
+            hx-include="#item-{{ id }} [name='_email']"
             class="btn btn-sm rounded-r-none w-8 px-0 js-decrement-btn"
         >
             -
@@ -26,6 +27,7 @@
             hx-post="/freezers/items/{{ id }}/increment"
             hx-target="#item-{{ id }}"
             hx-swap="outerHTML"
+            hx-include="#item-{{ id }} [name='_email']"
             class="btn btn-sm rounded-l-none"
         >
             +
@@ -42,4 +44,13 @@
             >{{ added_at }}</span
         >
     </div>
+    <input
+        type="text"
+        name="_email"
+        value=""
+        tabindex="-1"
+        autocomplete="off"
+        aria-hidden="true"
+        style="opacity:0;position:absolute;height:0;width:0;pointer-events:none;"
+    >
 </li>
