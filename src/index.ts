@@ -210,10 +210,19 @@ export default {
 
         if (url.pathname === "/freezers" && request.method === "POST") {
             const form = await request.formData();
-            return stub.freezer_create(
-                String(form.get("label")),
-                Number(form.get("tray_count")),
-            );
+            const label = String(form.get("label") ?? "").trim();
+            const trayCount = Number(form.get("tray_count") ?? 0);
+            if (!label) {
+                return new Response("Freezer label is required", {
+                    status: 422,
+                });
+            }
+            if (!Number.isInteger(trayCount) || trayCount < 1) {
+                return new Response("Tray count must be at least 1", {
+                    status: 422,
+                });
+            }
+            return stub.freezer_create(label, trayCount);
         }
 
         if (
