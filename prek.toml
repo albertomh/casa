@@ -30,7 +30,8 @@ hooks = [
 [[repos]]
 hooks = [
   { id = "biome-check", files = "\\.(ts|tsx|js|jsx|json|html)$", exclude = { glob = [
-	"**/worker-configuration.d.ts"
+	"**/worker-configuration.d.ts",
+	"src/templates/qr.html"
   ] } },
 ]
 repo = "https://github.com/biomejs/pre-commit"
@@ -40,7 +41,7 @@ rev = "v2.4.8"
 [[repos]]
 repo = "https://github.com/crate-ci/typos"
 rev = "v1.44.0"
-hooks = [{ id = "typos", args = ["--force-exclude"] }]
+hooks = [{ id = "typos", args = ["--force-exclude"], exclude = { glob = ["src/templates/qr.html"] } }]
 
 [[repos]]
 repo = "https://github.com/alessandrojcm/commitlint-pre-commit-hook"
