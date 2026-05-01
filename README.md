@@ -1,6 +1,6 @@
 # casa
 
-A small household management app. Currently features a freezer inventory tracker.
+A small household management webapp. Currently features a freezer inventory tracker.
 
 ## Stack
 
