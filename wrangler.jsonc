@@ -22,7 +22,7 @@
         ]
     },
     "secrets": {
-      "required": ["HOME_ADDRESS"],
+      "required": ["HOME_ADDRESS", "ALLOWED_COUNTRIES"],
     },
     "observability": {
         "enabled": true

@@ -142,8 +142,8 @@ export class CasaDurableObject extends DurableObject<Env> {
 
 function isFromAllowedCountry(
     request: Request & { cf?: IncomingRequestCfProperties },
+    allowedCountries: string[],
 ): boolean {
-    const allowedCountries = ["GB"];
     // <https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties>
     const country = request.cf?.country;
     return !!country && allowedCountries.includes(country);
@@ -159,7 +159,10 @@ export default {
      * @returns The response to be sent back to the client
      */
     async fetch(request, env, _ctx): Promise<Response> {
-        if (!isFromAllowedCountry(request)) {
+        const allowedCountries = env.ALLOWED_COUNTRIES.split(",")
+            .map((c: string) => c.trim())
+            .filter(Boolean);
+        if (!isFromAllowedCountry(request, allowedCountries)) {
             return new Response("Forbidden", { status: 403 });
         }
 
