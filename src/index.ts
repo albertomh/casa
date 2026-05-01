@@ -114,6 +114,7 @@ export class CasaDurableObject extends DurableObject<Env> {
         const items = this.freezer.listItemsByFreezer(freezerId);
         return this.freezerRenderer.trays(trays, items);
     }
+
     private renderFreezer(freezerId: number): Response {
         const html =
             this.freezerRenderer.scripts() +
@@ -127,9 +128,10 @@ export class CasaDurableObject extends DurableObject<Env> {
 
     async freezerUi(): Promise<Response> {
         const freezer = this.freezer_getActive();
+        const html = this.freezerRenderer.scripts() + NewFreezerHtml;
 
         if (!freezer) {
-            return new Response(NewFreezerHtml, {
+            return new Response(html, {
                 headers: { "Content-Type": "text/html" },
             });
         }
