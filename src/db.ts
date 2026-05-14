@@ -30,6 +30,26 @@ const MIGRATIONS = [
             ALTER TABLE freezer__items ADD COLUMN tray_id INTEGER NOT NULL REFERENCES freezer__trays(id);
         `,
     },
+    {
+        name: "004-jennflix-title",
+        sql: `
+            CREATE TABLE IF NOT EXISTS jennflix__title(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                imdb_url TEXT NOT NULL,
+                tags TEXT
+            );
+        `,
+    },
+    {
+        name: "005-jennflix-queue",
+        sql: `
+            CREATE TABLE IF NOT EXISTS jennflix__queue(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title_id INTEGER NOT NULL REFERENCES jennflix__title(id)
+            );
+        `,
+    },
 ];
 
 export function runMigrations(sql: SqlStorage): void {
