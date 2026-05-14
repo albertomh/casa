@@ -161,7 +161,7 @@ export class FreezerRenderer {
     }
 
     humanizeDate(isoUtc: string): string {
-        const date = new Date(isoUtc.replace(" ", "T") + "Z");
+        const date = new Date(`${isoUtc.replace("·", "T")}Z`);
         const now = new Date();
 
         const diffMs = now.getTime() - date.getTime();

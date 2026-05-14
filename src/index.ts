@@ -3,6 +3,7 @@ import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
 import { runMigrations } from "./db";
 import { type Freezer, FreezerRenderer, FreezerRepository } from "./freezer";
 import NewFreezerHtml from "./freezer/templates/new_freezer.html";
+import { JennflixRenderer, JennflixRepository } from "./jennflix";
 import FreezerHtml from "./templates/freezer.html";
 import HomeHtml from "./templates/home.html";
 import HomeContentHtml from "./templates/home_content.html";
@@ -26,6 +27,8 @@ const DURABLE_OBJECT_NAME = "casa";
 export class CasaDurableObject extends DurableObject<Env> {
     freezer: FreezerRepository;
     freezerRenderer: FreezerRenderer;
+    jennflix: JennflixRepository;
+    jennflixRenderer: JennflixRenderer;
 
     constructor(ctx: DurableObjectState, env: Env) {
         super(ctx, env);
@@ -35,7 +38,12 @@ export class CasaDurableObject extends DurableObject<Env> {
 
         this.freezer = new FreezerRepository(sql);
         this.freezerRenderer = new FreezerRenderer();
+        this.jennflix = new JennflixRepository(sql);
+        this.jennflixRenderer = new JennflixRenderer();
     }
+
+    // -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
 
     private freezer_getActive(): Freezer | null {
         return this.freezer.getFirstFreezer();
@@ -139,6 +147,39 @@ export class CasaDurableObject extends DurableObject<Env> {
 
         return this.renderFreezer(freezer.id);
     }
+
+    // -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
+
+    async jennflixUi(): Promise<Response> {
+        const titles = this.jennflix.listTitles();
+        const queue = this.jennflix.listQueue();
+        const html = this.jennflixRenderer.all(titles, queue);
+        return new Response(html, { headers: { "Content-Type": "text/html" } });
+    }
+
+    async jennflix_addTitle(form: FormData): Promise<Response> {
+        const title = String(form.get("title") ?? "").trim();
+        const imdb_url = String(form.get("imdb_url") ?? "").trim();
+        const tags = String(form.get("tags") ?? "").trim();
+        if (!title || !imdb_url) {
+            return new Response("Title and IMDB URL required", { status: 422 });
+        }
+        this.jennflix.addTitle(title, imdb_url, tags);
+        return this.jennflixUi();
+    }
+
+    async jennflix_addToQueue(form: FormData): Promise<Response> {
+        const title_id = Number(form.get("title_id"));
+        if (!title_id) return new Response("Missing title_id", { status: 422 });
+        this.jennflix.addToQueue(title_id);
+        return this.jennflixUi();
+    }
+
+    async jennflix_removeFromQueue(id: number): Promise<Response> {
+        this.jennflix.removeFromQueue(id);
+        return this.jennflixUi();
+    }
 }
 
 function isFromAllowedCountry(
@@ -150,7 +191,7 @@ function isFromAllowedCountry(
     return !!country && allowedCountries.includes(country);
 }
 
-async function botHoneypot(form: FormData): Promise<Response | void> {
+async function botHoneypot(form: FormData): Promise<Response | undefined> {
     if (form.get("_email")) {
         return new Response("Bad request", { status: 400 });
     }
@@ -199,6 +240,9 @@ export default {
                 headers: { "Content-Type": "text/html" },
             });
         }
+
+        // -----------------------------------------------------------------------------------
+        // -----------------------------------------------------------------------------------
 
         if (url.pathname === "/freezer/qr") {
             const qrUrl = `${url.origin}/freezer`;
@@ -283,6 +327,35 @@ export default {
                 Number(moveMatch[1]),
                 Number(form.get("tray_id")),
             );
+        }
+
+        // -----------------------------------------------------------------------------------
+        // -----------------------------------------------------------------------------------
+
+        if (url.pathname === "/jennflix") {
+            if (isHtmx) {
+                return stub.jennflixUi();
+            }
+            // Use the same htmlShell pattern as Freezer
+            const content = await stub.jennflixUi();
+            const html = await content.text();
+            return new Response(htmlShell(html), {
+                headers: { "Content-Type": "text/html" },
+            });
+        }
+        if (url.pathname === "/jennflix/titles" && request.method === "POST") {
+            const form = await request.formData();
+            return stub.jennflix_addTitle(form);
+        }
+        if (url.pathname === "/jennflix/queue" && request.method === "POST") {
+            const form = await request.formData();
+            return stub.jennflix_addToQueue(form);
+        }
+        const removeQueueMatch = url.pathname.match(
+            /^\/jennflix\/queue\/(\d+)\/remove$/,
+        );
+        if (removeQueueMatch && request.method === "POST") {
+            return stub.jennflix_removeFromQueue(Number(removeQueueMatch[1]));
         }
 
         return new Response("Not found", { status: 404 });
