@@ -1,0 +1,13 @@
+<li>
+    <span class="font-semibold">{{ title }}</span>
+    <a href="{{ imdb_url }}" target="_blank" class="text-blue-600 underline"
+        >IMDB</a
+    >
+    <span class="text-xs text-gray-500">{{ tags }}</span>
+    <form method="POST" action="/jennflix/queue" class="inline">
+        <input type="hidden" name="title_id" value="{{ id }}">
+        <button class="btn btn-xs btn-primary ml-2" type="submit">
+            Add to Queue
+        </button>
+    </form>
+</li>

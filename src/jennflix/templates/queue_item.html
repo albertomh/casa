@@ -1,0 +1,10 @@
+<li>
+    <span class="font-semibold">{{ title }}</span>
+    <form
+        method="POST"
+        action="/jennflix/queue/{{ queue_id }}/remove"
+        class="inline"
+    >
+        <button class="btn btn-xs btn-error ml-2" type="submit">Remove</button>
+    </form>
+</li>
