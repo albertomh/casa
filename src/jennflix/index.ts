@@ -1,3 +1,4 @@
+import utils from "../utils";
 import AllHtml from "./templates/all.html";
 import HeaderHtml from "./templates/header.html";
 import QueueItemHtml from "./templates/queue_item.html";
@@ -63,13 +64,6 @@ export class JennflixRepository {
 }
 
 export class JennflixRenderer {
-    escape(s: unknown): string {
-        return String(s)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;");
-    }
-
     scripts(): string {
         return ScriptsHtml;
     }
@@ -80,10 +74,10 @@ export class JennflixRenderer {
 
     titleItem(title: JennflixTitle): string {
         const values: Record<string, string> = {
-            "{{ id }}": this.escape(title.id),
-            "{{ title }}": this.escape(title.title),
-            "{{ imdb_url }}": this.escape(title.imdb_url),
-            "{{ tags }}": this.escape(title.tags ?? ""),
+            "{{ id }}": utils.escape(title.id),
+            "{{ title }}": utils.escape(title.title),
+            "{{ imdb_url }}": utils.escape(title.imdb_url),
+            "{{ tags }}": utils.escape(title.tags ?? ""),
         };
         return TitleItemHtml.replace(
             /\{\{ [\w]+ \}\}/g,
@@ -93,8 +87,8 @@ export class JennflixRenderer {
 
     queueItem(title: JennflixTitle, queueId: number): string {
         const values: Record<string, string> = {
-            "{{ title }}": this.escape(title.title),
-            "{{ queue_id }}": this.escape(queueId),
+            "{{ title }}": utils.escape(title.title),
+            "{{ queue_id }}": utils.escape(queueId),
         };
         return QueueItemHtml.replace(
             /\{\{ [\w]+ \}\}/g,
