@@ -1,7 +1,5 @@
-{{ scripts }}
-{{ header }}
 <div class="container mx-auto max-w-xl">
-    <h2 class="text-2xl font-bold mb-2">Jennflix Queue</h2>
+    <h2 class="text-2xl font-bold mb-2">New title</h2>
     <form
         id="jennflix-add-title"
         method="POST"
@@ -23,12 +21,4 @@
         <input name="tags" placeholder="Tags" class="input input-bordered">
         <button type="submit" class="btn btn-primary">Add Title</button>
     </form>
-    <h3 class="text-lg font-semibold mt-4">Titles</h3>
-    <ul class="list-disc ml-6 mb-6">
-        {{ titles }}
-    </ul>
-    <h3 class="text-lg font-semibold mt-4">Queue</h3>
-    <ul class="list-decimal ml-6">
-        {{ queue }}
-    </ul>
 </div>

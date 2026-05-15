@@ -1,9 +1,11 @@
 import utils from "../utils";
-import AllHtml from "./templates/all.html";
 import HeaderHtml from "./templates/header.html";
+import AllQueueHtml from "./templates/queue_all.html";
 import QueueItemHtml from "./templates/queue_item.html";
 import ScriptsHtml from "./templates/scripts.html";
 import TitleItemHtml from "./templates/title_item.html";
+import NewTitleHtml from "./templates/title_new.html";
+import AllTitlesHtml from "./templates/titles_all.html";
 
 export type JennflixTitle = {
     id: number;
@@ -72,6 +74,10 @@ export class JennflixRenderer {
         return HeaderHtml;
     }
 
+    newTitleForm(): string {
+        return NewTitleHtml;
+    }
+
     titleItem(title: JennflixTitle): string {
         const values: Record<string, string> = {
             "{{ id }}": utils.escape(title.id),
@@ -96,17 +102,18 @@ export class JennflixRenderer {
         );
     }
 
-    all(titles: JennflixTitle[], queue: JennflixQueue[]): string {
-        const titlesHtml = titles.map((t) => this.titleItem(t)).join("");
+    queue(titles: JennflixTitle[], queue: JennflixQueue[]): string {
         const queueHtml = queue
             .map((q) => {
                 const t = titles.find((t) => t.id === q.title_id);
                 return t ? this.queueItem(t, q.id) : "";
             })
             .join("");
-        return AllHtml.replace("{{ scripts }}", this.scripts())
-            .replace("{{ header }}", this.header())
-            .replace("{{ titles }}", titlesHtml)
-            .replace("{{ queue }}", queueHtml);
+        return AllQueueHtml.replace("{{ queue }}", queueHtml);
+    }
+
+    titles(titles: JennflixTitle[]): string {
+        const titlesHtml = titles.map((t) => this.titleItem(t)).join("");
+        return AllTitlesHtml.replace("{{ titles }}", titlesHtml);
     }
 }

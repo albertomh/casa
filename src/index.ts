@@ -4,6 +4,7 @@ import { runMigrations } from "./db";
 import { type Freezer, FreezerRenderer, FreezerRepository } from "./freezer";
 import NewFreezerHtml from "./freezer/templates/new_freezer.html";
 import { JennflixRenderer, JennflixRepository } from "./jennflix";
+import NewTitleHtml from "./jennflix/templates/title_new.html";
 import FreezerHtml from "./templates/freezer.html";
 import HomeHtml from "./templates/home.html";
 import HomeContentHtml from "./templates/home_content.html";
@@ -151,11 +152,32 @@ export class CasaDurableObject extends DurableObject<Env> {
     // -----------------------------------------------------------------------------------
     // -----------------------------------------------------------------------------------
 
-    async jennflixUi(): Promise<Response> {
+    private renderJennflix(): Response {
         const titles = this.jennflix.listTitles();
         const queue = this.jennflix.listQueue();
-        const html = this.jennflixRenderer.all(titles, queue);
-        return new Response(html, { headers: { "Content-Type": "text/html" } });
+        const html =
+            this.jennflixRenderer.scripts() +
+            this.jennflixRenderer.header() +
+            this.jennflixRenderer.queue(titles, queue) +
+            this.jennflixRenderer.titles(titles);
+
+        return new Response(html, {
+            headers: { "Content-Type": "text/html" },
+        });
+    }
+
+    async jennflixUi(): Promise<Response> {
+        return this.renderJennflix();
+    }
+
+    async jennflix_newTitleForm(): Promise<Response> {
+        const html =
+            this.jennflixRenderer.scripts() +
+            this.jennflixRenderer.header() +
+            this.jennflixRenderer.newTitleForm();
+        return new Response(html, {
+            headers: { "Content-Type": "text/html" },
+        });
     }
 
     async jennflix_addTitle(form: FormData): Promise<Response> {
@@ -230,6 +252,21 @@ export default {
                 content,
             );
 
+        // -----------------------------------------------------------------------------------
+        // STATIC ASSETS
+        // -----------------------------------------------------------------------------------
+
+        if (
+            url.pathname.startsWith("/posters/") ||
+            url.pathname.startsWith("/static/") ||
+            url.pathname === "/favicon.ico"
+        ) {
+            return env.ASSETS.fetch(request);
+        }
+
+        // -----------------------------------------------------------------------------------
+        // -----------------------------------------------------------------------------------
+
         if (url.pathname === "/") {
             if (isHtmx) {
                 return new Response(HomeContentHtml, {
@@ -252,7 +289,7 @@ export default {
             });
         }
 
-        if (url.pathname === "/freezer") {
+        if (["/freezer", "/freezer/"].includes(url.pathname) && request) {
             if (isHtmx) {
                 return new Response(FreezerHtml, {
                     headers: { "Content-Type": "text/html" },
@@ -332,25 +369,44 @@ export default {
         // -----------------------------------------------------------------------------------
         // -----------------------------------------------------------------------------------
 
-        if (url.pathname === "/jennflix") {
+        if (
+            ["/jennflix", "/jennflix/"].includes(url.pathname) &&
+            request.method === "GET"
+        ) {
             if (isHtmx) {
                 return stub.jennflixUi();
             }
-            // Use the same htmlShell pattern as Freezer
             const content = await stub.jennflixUi();
             const html = await content.text();
             return new Response(htmlShell(html), {
                 headers: { "Content-Type": "text/html" },
             });
         }
+
+        if (
+            url.pathname === "/jennflix/titles/new" &&
+            request.method === "GET"
+        ) {
+            if (isHtmx) {
+                return stub.jennflix_newTitleForm();
+            }
+            const content = await stub.jennflix_newTitleForm();
+            const html = await content.text();
+            return new Response(htmlShell(html), {
+                headers: { "Content-Type": "text/html" },
+            });
+        }
+
         if (url.pathname === "/jennflix/titles" && request.method === "POST") {
             const form = await request.formData();
             return stub.jennflix_addTitle(form);
         }
+
         if (url.pathname === "/jennflix/queue" && request.method === "POST") {
             const form = await request.formData();
             return stub.jennflix_addToQueue(form);
         }
+
         const removeQueueMatch = url.pathname.match(
             /^\/jennflix\/queue\/(\d+)\/remove$/,
         );

@@ -44,6 +44,16 @@ pnpm run cf-typegen  # regenerate worker-configuration.d.ts after wrangler.jsonc
 pnpm run deploy      # wrangler deploy
 ```
 
+## Static assets
+
+Static assets live in `public/` which is ignored by git. To commit assets:
+
+```sh
+zip -r -e public.zip public/
+
+unzip public.zip
+```
+
 ## Deploy
 
 The following must be set as Cloudflare secrets before deploying:
@@ -58,7 +68,7 @@ wrangler secret put ALLOWED_COUNTRIES
 
 ```sh
 # Deploy the Durable Object to Cloudflare
-pnpm run deploy
+unzip public.zip && pnpm run deploy
 ```
 
 ## Linting & formatting
