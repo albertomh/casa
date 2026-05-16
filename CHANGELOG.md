@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/albertomh/casa/compare/casa-v1.0.0...casa-v1.1.0) (2026-05-16)
+
+
+### Features
+
+* Add a /freezer/qr page for quick access ([d58fe62](https://github.com/albertomh/casa/commit/d58fe62df28a64041d8d43c966524c46e6f442c8))
+* Add a honeypot field to the Freezer form ([#17](https://github.com/albertomh/casa/issues/17)) ([fb2aa7b](https://github.com/albertomh/casa/commit/fb2aa7b634190e57053f5d5c47e1816f6d5b542f))
+* Add jennflix applet ([#20](https://github.com/albertomh/casa/issues/20)) ([d476371](https://github.com/albertomh/casa/commit/d47637104a392d296f9c73c614a243899ab400d6))
+* **jennflix:** Add /qr page ([#23](https://github.com/albertomh/casa/issues/23)) ([1e23064](https://github.com/albertomh/casa/commit/1e23064f4359b229c3b6b9c9a3e63b6c9b54f51c))
+* **jennflix:** Add count to 'titles' heading ([#24](https://github.com/albertomh/casa/issues/24)) ([8460512](https://github.com/albertomh/casa/commit/84605126846a2afaf38f8cf71f1369a22dbcba93))
+* **jennflix:** Add media type filter ([#21](https://github.com/albertomh/casa/issues/21)) ([76cc596](https://github.com/albertomh/casa/commit/76cc596d03b786e65f806135ad224ea59e6975f9))
+* **jennflix:** Add unique constraints on title.title, title.imdb_url ([#22](https://github.com/albertomh/casa/issues/22)) ([dfa3649](https://github.com/albertomh/casa/commit/dfa3649c094ca9d7a42eacf57cf8748ed025d291))
+
 ## 1.0.0 (2026-05-01)
 
 
