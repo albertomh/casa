@@ -461,6 +461,14 @@ export default {
         // -----------------------------------------------------------------------------------
         // -----------------------------------------------------------------------------------
 
+        if (url.pathname === "/jennflix/qr") {
+            const qrUrl = `${url.origin}/jennflix`;
+            const html = FreezerQrHtml.replaceAll("<!--QR_URL-->", qrUrl);
+            return new Response(html, {
+                headers: { "Content-Type": "text/html" },
+            });
+        }
+
         if (
             ["/jennflix", "/jennflix/"].includes(url.pathname) &&
             request.method === "GET"
