@@ -191,11 +191,13 @@ export class JennflixRenderer {
     }
 
     header(urlPathname = ""): string {
-        const isNewTitlePage =
-            urlPathname.includes("/jennflix/titles/new") ?? false;
+        const isTitleAction =
+            urlPathname.includes("/jennflix/titles/new") ||
+            (urlPathname.startsWith("/jennflix/titles/") &&
+                urlPathname.endsWith("/edit"));
         return HeaderHtml.replace(
             "{{ add_btn_class }}",
-            isNewTitlePage ? "invisible" : "",
+            isTitleAction ? "invisible" : "",
         );
     }
 
@@ -268,6 +270,12 @@ export class JennflixRenderer {
                     : "";
             })
             .join("");
+        if (queueHtml.trim() === "") {
+            return AllQueueHtml.replace(
+                "{{ queue }}",
+                "<p class='text-sm text-black/60 pt-1'>Your list is empty.</p>",
+            );
+        }
         return AllQueueHtml.replace("{{ queue }}", queueHtml);
     }
 
