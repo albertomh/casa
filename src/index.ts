@@ -157,9 +157,11 @@ export class CasaDurableObject extends DurableObject<Env> {
         const queuedTitleIds = new Set(queue.map((item) => item.title_id));
         const html =
             this.jennflixRenderer.scripts() +
-            this.jennflixRenderer.header(urlPathname) +
-            this.jennflixRenderer.queue(titles, queue) +
-            this.jennflixRenderer.titles(titles, queuedTitleIds);
+            this.jennflixRenderer.applet(
+                this.jennflixRenderer.header(urlPathname) +
+                    this.jennflixRenderer.queue(titles, queue) +
+                    this.jennflixRenderer.titles(titles, queuedTitleIds),
+            );
 
         return new Response(html, {
             headers: { "Content-Type": "text/html" },
@@ -173,8 +175,10 @@ export class CasaDurableObject extends DurableObject<Env> {
     async jennflix_newTitleForm(urlPathname: string): Promise<Response> {
         const html =
             this.jennflixRenderer.scripts() +
-            this.jennflixRenderer.header(urlPathname) +
-            this.jennflixRenderer.newTitleForm();
+            this.jennflixRenderer.applet(
+                this.jennflixRenderer.header(urlPathname) +
+                    this.jennflixRenderer.newTitleForm(),
+            );
         return new Response(html, { headers: { "Content-Type": "text/html" } });
     }
 
@@ -205,8 +209,10 @@ export class CasaDurableObject extends DurableObject<Env> {
         if (!title) return new Response("Not found", { status: 404 });
         const html =
             this.jennflixRenderer.scripts() +
-            this.jennflixRenderer.header(urlPathname) +
-            this.jennflixRenderer.editTitleForm(title);
+            this.jennflixRenderer.applet(
+                this.jennflixRenderer.header(urlPathname) +
+                    this.jennflixRenderer.editTitleForm(title),
+            );
         return new Response(html, { headers: { "Content-Type": "text/html" } });
     }
 
@@ -293,6 +299,21 @@ export default {
                 "<!--CONTENT-->",
                 content,
             );
+        const respondJennflix = async (
+            contentPromise: Promise<Response>,
+        ): Promise<Response> => {
+            const content = await contentPromise;
+            if (isHtmx) return content;
+
+            const html = await content.text();
+            const headers = new Headers(content.headers);
+            headers.set("Content-Type", "text/html");
+
+            return new Response(htmlShell(html), {
+                headers,
+                status: content.status,
+            });
+        };
 
         // -----------------------------------------------------------------------------------
         // STATIC ASSETS
@@ -415,33 +436,25 @@ export default {
             ["/jennflix", "/jennflix/"].includes(url.pathname) &&
             request.method === "GET"
         ) {
-            if (isHtmx) return stub.jennflixUi(url.pathname);
-            const content = await stub.jennflixUi(url.pathname);
-            const html = await content.text();
-            return new Response(htmlShell(html), {
-                headers: { "Content-Type": "text/html" },
-            });
+            return respondJennflix(stub.jennflixUi(url.pathname));
         }
 
         if (
             url.pathname === "/jennflix/titles/new" &&
             request.method === "GET"
         ) {
-            if (isHtmx) return stub.jennflix_newTitleForm(url.pathname);
-            const content = await stub.jennflix_newTitleForm(url.pathname);
-            const html = await content.text();
-            return new Response(htmlShell(html), {
-                headers: { "Content-Type": "text/html" },
-            });
+            return respondJennflix(stub.jennflix_newTitleForm(url.pathname));
         }
 
         if (url.pathname === "/jennflix/titles" && request.method === "POST") {
             const form = await request.formData();
-            return stub.jennflix_addTitle(
-                String(form.get("title") ?? "").trim(),
-                String(form.get("poster_path") ?? "").trim(),
-                String(form.get("imdb_url") ?? "").trim(),
-                String(form.get("tags") ?? "").trim(),
+            return respondJennflix(
+                stub.jennflix_addTitle(
+                    String(form.get("title") ?? "").trim(),
+                    String(form.get("poster_path") ?? "").trim(),
+                    String(form.get("imdb_url") ?? "").trim(),
+                    String(form.get("tags") ?? "").trim(),
+                ),
             );
         }
 
@@ -451,21 +464,20 @@ export default {
         if (editTitleMatch) {
             const id = Number(editTitleMatch[1]);
             if (request.method === "GET") {
-                if (isHtmx) return stub.jennflix_editTitleForm(id);
-                const content = await stub.jennflix_editTitleForm(id);
-                const html = await content.text();
-                return new Response(htmlShell(html), {
-                    headers: { "Content-Type": "text/html" },
-                });
+                return respondJennflix(
+                    stub.jennflix_editTitleForm(id, url.pathname),
+                );
             }
             if (request.method === "POST") {
                 const form = await request.formData();
-                return stub.jennflix_updateTitle(
-                    id,
-                    String(form.get("title") ?? "").trim(),
-                    String(form.get("poster_path") ?? "").trim(),
-                    String(form.get("imdb_url") ?? "").trim(),
-                    String(form.get("tags") ?? "").trim(),
+                return respondJennflix(
+                    stub.jennflix_updateTitle(
+                        id,
+                        String(form.get("title") ?? "").trim(),
+                        String(form.get("poster_path") ?? "").trim(),
+                        String(form.get("imdb_url") ?? "").trim(),
+                        String(form.get("tags") ?? "").trim(),
+                    ),
                 );
             }
         }
@@ -474,12 +486,16 @@ export default {
             /^\/jennflix\/titles\/(\d+)\/delete$/,
         );
         if (deleteTitleMatch && request.method === "POST") {
-            return stub.jennflix_deleteTitle(Number(deleteTitleMatch[1]));
+            return respondJennflix(
+                stub.jennflix_deleteTitle(Number(deleteTitleMatch[1])),
+            );
         }
 
         if (url.pathname === "/jennflix/queue" && request.method === "POST") {
             const form = await request.formData();
-            return stub.jennflix_addToQueue(Number(form.get("title_id")));
+            return respondJennflix(
+                stub.jennflix_addToQueue(Number(form.get("title_id"))),
+            );
         }
 
         const moveQueueMatch = url.pathname.match(
@@ -487,9 +503,11 @@ export default {
         );
         if (moveQueueMatch && request.method === "POST") {
             const form = await request.formData();
-            return stub.jennflix_moveQueueItem(
-                Number(moveQueueMatch[1]),
-                String(form.get("direction")) as "up" | "down",
+            return respondJennflix(
+                stub.jennflix_moveQueueItem(
+                    Number(moveQueueMatch[1]),
+                    String(form.get("direction")) as "up" | "down",
+                ),
             );
         }
 
@@ -497,7 +515,9 @@ export default {
             /^\/jennflix\/queue\/(\d+)\/watched$/,
         );
         if (watchedQueueMatch && request.method === "POST") {
-            return stub.jennflix_markWatched(Number(watchedQueueMatch[1]));
+            return respondJennflix(
+                stub.jennflix_markWatched(Number(watchedQueueMatch[1])),
+            );
         }
 
         return new Response("Not found", { status: 404 });

@@ -186,6 +186,10 @@ export class JennflixRenderer {
         return ScriptsHtml;
     }
 
+    applet(content: string): string {
+        return `<section id="jennflix-applet" hx-boost="true" hx-target="#applet">${content}</section>`;
+    }
+
     header(urlPathname = ""): string {
         const isNewTitlePage =
             urlPathname.includes("/jennflix/titles/new") ?? false;
