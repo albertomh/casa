@@ -22,6 +22,10 @@
             <form
                 method="POST"
                 action="/jennflix/titles/{{ id }}/edit"
+                hx-post="/jennflix/titles/{{ id }}/edit"
+                hx-target="#applet"
+                hx-push-url="false"
+                hx-replace-url="/jennflix"
                 class="flex flex-col gap-2"
             >
                 <input
@@ -38,18 +42,78 @@
                     required
                     class="input input-bordered w-full"
                 >
+                <fieldset class="flex flex-col gap-2">
+                    <legend class="text-sm font-iter pb-1">Media type</legend>
+                    <div class="join">
+                        <input
+                            id="media-type-film"
+                            type="radio"
+                            name="media_type"
+                            value="film"
+                            class="sr-only"
+                            {{ film_checked }}
+                        >
+                        <label
+                            for="media-type-film"
+                            class="btn btn-sm join-item rounded-l-md"
+                        >
+                            Film
+                        </label>
+                        <input
+                            id="media-type-tv"
+                            type="radio"
+                            name="media_type"
+                            value="tv"
+                            class="sr-only"
+                            {{ tv_checked }}
+                        >
+                        <label
+                            for="media-type-tv"
+                            class="btn btn-sm join-item rounded-r-md"
+                        >
+                            TV
+                        </label>
+                    </div>
+                </fieldset>
                 <input
                     name="tags"
                     placeholder="Tags"
                     value="{{ tags }}"
                     class="input input-bordered w-full"
                 >
-                <input
-                    name="location"
-                    placeholder="Location"
-                    value="{{ location }}"
-                    class="input input-bordered w-full"
-                >
+                <fieldset class="flex flex-col gap-2">
+                    <legend class="text-sm font-iter pb-1">Location</legend>
+                    <div class="join">
+                        <input
+                            id="location-dvd"
+                            type="radio"
+                            name="location"
+                            value="DVD"
+                            class="sr-only"
+                            {{ dvd_checked }}
+                        >
+                        <label
+                            for="location-dvd"
+                            class="btn btn-sm join-item rounded-l-md"
+                        >
+                            DVD
+                        </label>
+                        <input
+                            id="location-hdd"
+                            type="radio"
+                            name="location"
+                            value="HDD"
+                            class="sr-only"
+                            {{ hdd_checked }}
+                        >
+                        <label
+                            for="location-hdd"
+                            class="btn btn-sm join-item rounded-r-md"
+                        >
+                            HDD
+                        </label>
+                    </div>
+                </fieldset>
                 <input
                     name="poster_path"
                     placeholder="/jennflix/posters/firefly.jpg"

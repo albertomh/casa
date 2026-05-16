@@ -29,12 +29,24 @@ details[data-title-card][open] .js-title-actions {
 details.collapse-arrow[open] > .collapse-title::after {
     transform: translateY(-50%) rotate(225deg);
 }
+
+input[type="radio"].sr-only:checked + label.btn {
+    background: oklch(0.577 0.245 27.325);
+    border-color: oklch(0.577 0.245 27.325);
+    color: white;
+}
+
+.is-media-filter-hidden {
+    display: none !important;
+}
 </style>
 
 <script id="applet-scripts" hx-swap-oob="true">
 (() => {
     const buttonId = "jennflix-header-add-title-btn";
     const deleteTimers = new WeakMap();
+    const mediaFilterKey = "jennflix-media-filter";
+    const mediaFilterValues = new Set(["all", "film", "tv"]);
 
     const getButton = () => document.getElementById(buttonId);
 
@@ -55,12 +67,63 @@ details.collapse-arrow[open] > .collapse-title::after {
             : window.location.pathname;
     };
 
-    document.addEventListener("htmx:afterOnLoad", (event) => {
-        setVisibility(pathnameFromEvent(event));
+    const normalizeMediaFilter = (value) =>
+        mediaFilterValues.has(value) ? value : "all";
+
+    const applyMediaFilter = (value) => {
+        const normalizedValue = normalizeMediaFilter(value);
+        document
+            .querySelectorAll("details[data-title-card]")
+            .forEach((card) => {
+                const mediaType = card.dataset.mediaType || "film";
+                card.classList.toggle(
+                    "is-media-filter-hidden",
+                    !(
+                        normalizedValue === "all" ||
+                        mediaType === normalizedValue
+                    ),
+                );
+            });
+    };
+
+    const syncMediaFilterUi = (value) => {
+        const normalizedValue = normalizeMediaFilter(value);
+        const input = document.querySelector(
+            `input[name="media_filter"][value="${normalizedValue}"]`,
+        );
+        if (input instanceof HTMLInputElement) {
+            input.checked = true;
+        }
+    };
+
+    const restoreMediaFilter = () => {
+        const value = normalizeMediaFilter(
+            localStorage.getItem(mediaFilterKey) || "all",
+        );
+        syncMediaFilterUi(value);
+        applyMediaFilter(value);
+    };
+
+    const restoreAppletState = (pathname) => {
+        setVisibility(pathname);
+        restoreMediaFilter();
+    };
+
+    document.addEventListener("htmx:afterSwap", (event) => {
+        restoreAppletState(pathnameFromEvent(event));
     });
 
     document.addEventListener("htmx:historyRestore", (event) => {
-        setVisibility(pathnameFromEvent(event));
+        restoreAppletState(pathnameFromEvent(event));
+    });
+
+    document.addEventListener("change", (event) => {
+        const input = event.target;
+        if (!(input instanceof HTMLInputElement)) return;
+        if (input.name !== "media_filter") return;
+        const value = normalizeMediaFilter(input.value || "all");
+        localStorage.setItem(mediaFilterKey, value);
+        applyMediaFilter(value);
     });
 
     document.addEventListener(
@@ -99,9 +162,9 @@ details.collapse-arrow[open] > .collapse-title::after {
     );
 
     window.addEventListener("popstate", () => {
-        setVisibility(window.location.pathname);
+        restoreAppletState(window.location.pathname);
     });
 
-    setVisibility(window.location.pathname);
+    restoreAppletState(window.location.pathname);
 })();
 </script>
