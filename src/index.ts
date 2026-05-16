@@ -151,12 +151,12 @@ export class CasaDurableObject extends DurableObject<Env> {
     // -----------------------------------------------------------------------------------
     // -----------------------------------------------------------------------------------
 
-    private renderJennflix(): Response {
+    private renderJennflix(urlPathname = ""): Response {
         const titles = this.jennflix.listTitles();
         const queue = this.jennflix.listQueue();
         const html =
             this.jennflixRenderer.scripts() +
-            this.jennflixRenderer.header() +
+            this.jennflixRenderer.header(urlPathname) +
             this.jennflixRenderer.queue(titles, queue) +
             this.jennflixRenderer.titles(titles);
 
@@ -165,14 +165,14 @@ export class CasaDurableObject extends DurableObject<Env> {
         });
     }
 
-    async jennflixUi(): Promise<Response> {
-        return this.renderJennflix();
+    async jennflixUi(urlPathname: string): Promise<Response> {
+        return this.renderJennflix(urlPathname);
     }
 
-    async jennflix_newTitleForm(): Promise<Response> {
+    async jennflix_newTitleForm(urlPathname: string): Promise<Response> {
         const html =
             this.jennflixRenderer.scripts() +
-            this.jennflixRenderer.header() +
+            this.jennflixRenderer.header(urlPathname) +
             this.jennflixRenderer.newTitleForm();
         return new Response(html, { headers: { "Content-Type": "text/html" } });
     }
@@ -201,12 +201,15 @@ export class CasaDurableObject extends DurableObject<Env> {
         return this.renderJennflix();
     }
 
-    async jennflix_editTitleForm(id: number): Promise<Response> {
+    async jennflix_editTitleForm(
+        id: number,
+        urlPathname = "",
+    ): Promise<Response> {
         const title = this.jennflix.getTitle(id);
         if (!title) return new Response("Not found", { status: 404 });
         const html =
             this.jennflixRenderer.scripts() +
-            this.jennflixRenderer.header() +
+            this.jennflixRenderer.header(urlPathname) +
             this.jennflixRenderer.editTitleForm(title);
         return new Response(html, { headers: { "Content-Type": "text/html" } });
     }
@@ -416,8 +419,8 @@ export default {
             ["/jennflix", "/jennflix/"].includes(url.pathname) &&
             request.method === "GET"
         ) {
-            if (isHtmx) return stub.jennflixUi();
-            const content = await stub.jennflixUi();
+            if (isHtmx) return stub.jennflixUi(url.pathname);
+            const content = await stub.jennflixUi(url.pathname);
             const html = await content.text();
             return new Response(htmlShell(html), {
                 headers: { "Content-Type": "text/html" },
@@ -428,8 +431,8 @@ export default {
             url.pathname === "/jennflix/titles/new" &&
             request.method === "GET"
         ) {
-            if (isHtmx) return stub.jennflix_newTitleForm();
-            const content = await stub.jennflix_newTitleForm();
+            if (isHtmx) return stub.jennflix_newTitleForm(url.pathname);
+            const content = await stub.jennflix_newTitleForm(url.pathname);
             const html = await content.text();
             return new Response(htmlShell(html), {
                 headers: { "Content-Type": "text/html" },

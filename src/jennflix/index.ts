@@ -169,8 +169,13 @@ export class JennflixRenderer {
         return ScriptsHtml;
     }
 
-    header(): string {
-        return HeaderHtml;
+    header(urlPathname = ""): string {
+        const isNewTitlePage =
+            urlPathname.includes("/jennflix/titles/new") ?? false;
+        return HeaderHtml.replace(
+            "{{ add_btn_class }}",
+            isNewTitlePage ? "invisible" : "",
+        );
     }
 
     newTitleForm(): string {

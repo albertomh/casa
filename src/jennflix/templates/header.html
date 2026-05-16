@@ -1,6 +1,11 @@
-<header class="navbar bg-base-200 mb-4">
-    <div class="flex flex-1 justify-center">
-        <a href="/jennflix">
+<header class="navbar bg-base-200 mb-4 px-4">
+    <div class="navbar-start">
+        <a
+            href="/jennflix"
+            hx-get="/jennflix"
+            hx-target="#applet"
+            hx-push-url="true"
+        >
             <svg
                 width="128.77"
                 height="42"
@@ -14,6 +19,19 @@
                     fill="#e50914"
                 />
             </svg>
+        </a>
+    </div>
+    <div class="navbar-end">
+        <a
+            id="jennflix-header-add-title-btn"
+            href="/jennflix/titles/new"
+            hx-get="/jennflix/titles/new"
+            hx-target="#applet"
+            hx-push-url="true"
+            class="btn btn-sm bg-red-600 text-white rounded-md uppercase self-end w-auto px-4 {{ add_btn_class }}"
+        >
+            <i class="bi bi-plus-circle"></i>
+            Add title
         </a>
     </div>
 </header>
