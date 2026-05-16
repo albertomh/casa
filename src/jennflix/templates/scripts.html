@@ -67,6 +67,57 @@ input[type="radio"].sr-only:checked + label.btn {
             : window.location.pathname;
     };
 
+    document.addEventListener("htmx:afterSwap", (event) => {
+        restoreAppletState(pathnameFromEvent(event));
+    });
+
+    document.addEventListener("htmx:historyRestore", (event) => {
+        restoreAppletState(pathnameFromEvent(event));
+    });
+
+    window.addEventListener("popstate", () => {
+        restoreAppletState(window.location.pathname);
+    });
+
+    // -----------------------------------------------------------------------------------
+
+    document.addEventListener(
+        "click",
+        (event) => {
+            const deleteButton = event.target.closest(".js-title-delete-btn");
+            if (!deleteButton) return;
+
+            const scope =
+                deleteButton.closest("[data-delete-confirm-scope]") ??
+                deleteButton.closest("form");
+            if (!scope) return;
+
+            if (scope.dataset.pendingDelete === "true") {
+                scope.dataset.pendingDelete = "false";
+                clearTimeout(deleteTimers.get(scope));
+                deleteTimers.delete(scope);
+                deleteButton.textContent = "Delete";
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            scope.dataset.pendingDelete = "true";
+            deleteButton.innerHTML =
+                '<i class="bi bi-trash3-fill text-red-600"></i> Delete forever';
+
+            const timer = setTimeout(() => {
+                scope.dataset.pendingDelete = "false";
+                deleteButton.innerHTML = "Delete";
+                deleteTimers.delete(scope);
+            }, 5000);
+            deleteTimers.set(scope, timer);
+        },
+        true,
+    );
+
+    // -----------------------------------------------------------------------------------
+
     const normalizeMediaFilter = (value) =>
         mediaFilterValues.has(value) ? value : "all";
 
@@ -109,13 +160,15 @@ input[type="radio"].sr-only:checked + label.btn {
         restoreMediaFilter();
     };
 
-    document.addEventListener("htmx:afterSwap", (event) => {
-        restoreAppletState(pathnameFromEvent(event));
-    });
-
-    document.addEventListener("htmx:historyRestore", (event) => {
-        restoreAppletState(pathnameFromEvent(event));
-    });
+    const updateTitleCount = () => {
+        const count = document.querySelectorAll(
+            "details[data-title-card]:not(.is-media-filter-hidden)",
+        ).length;
+        const countSpan = document.getElementById("titles-count");
+        if (countSpan) {
+            countSpan.textContent = `(${count})`;
+        }
+    };
 
     document.addEventListener("change", (event) => {
         const input = event.target;
@@ -124,46 +177,10 @@ input[type="radio"].sr-only:checked + label.btn {
         const value = normalizeMediaFilter(input.value || "all");
         localStorage.setItem(mediaFilterKey, value);
         applyMediaFilter(value);
+        updateTitleCount();
     });
 
-    document.addEventListener(
-        "click",
-        (event) => {
-            const deleteButton = event.target.closest(".js-title-delete-btn");
-            if (!deleteButton) return;
-
-            const scope =
-                deleteButton.closest("[data-delete-confirm-scope]") ??
-                deleteButton.closest("form");
-            if (!scope) return;
-
-            if (scope.dataset.pendingDelete === "true") {
-                scope.dataset.pendingDelete = "false";
-                clearTimeout(deleteTimers.get(scope));
-                deleteTimers.delete(scope);
-                deleteButton.textContent = "Delete";
-                return;
-            }
-
-            event.preventDefault();
-            event.stopPropagation();
-            scope.dataset.pendingDelete = "true";
-            deleteButton.innerHTML =
-                '<i class="bi bi-trash3-fill text-red-600"></i> Delete forever';
-
-            const timer = setTimeout(() => {
-                scope.dataset.pendingDelete = "false";
-                deleteButton.innerHTML = "Delete";
-                deleteTimers.delete(scope);
-            }, 5000);
-            deleteTimers.set(scope, timer);
-        },
-        true,
-    );
-
-    window.addEventListener("popstate", () => {
-        restoreAppletState(window.location.pathname);
-    });
+    // -----------------------------------------------------------------------------------
 
     restoreAppletState(window.location.pathname);
 })();

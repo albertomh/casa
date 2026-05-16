@@ -300,6 +300,9 @@ export class JennflixRenderer {
         const titlesHtml = titles
             .map((t) => this.titleItem(t, queuedTitleIds.has(t.id)))
             .join("");
-        return AllTitlesHtml.replace("{{ titles }}", titlesHtml);
+        return AllTitlesHtml.replace("{{ titles }}", titlesHtml).replace(
+            "{{ titles_count }}",
+            `<span id="titles-count" class="ms-1 text-black/60">(${titles.length})</span>`,
+        );
     }
 }
