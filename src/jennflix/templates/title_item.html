@@ -4,6 +4,11 @@
     name="jennflix-title-card"
 >
     <summary class="list-none cursor-pointer select-none">
+        <div
+            class="absolute top-2 left-2 z-10 rounded-md bg-white px-2 py-1 text-xs font-semibold text-black {{ location_badge_class }}"
+        >
+            {{ location }}
+        </div>
         <img
             src="{{ poster_path }}"
             alt="{{ title }}"
@@ -19,7 +24,7 @@
     <div
         class="js-title-actions pointer-events-none absolute inset-0 hidden flex-col justify-between gap-3 bg-black/80 p-3"
     >
-        <div class="grid grid-cols-1 gap-2 h-full pointer-events-auto">
+        <div class="grid grid-cols-1 pt-7 gap-2 h-full pointer-events-auto">
             <a
                 href="{{ imdb_url }}"
                 target="_blank"
@@ -27,10 +32,17 @@
                 class="btn btn-sm btn-outline min-h-11 text-sm text-white"
                 >IMDB <i class="bi bi-box-arrow-up-right"></i></a
             >
-            <form method="POST" action="/jennflix/queue" class="contents">
+            <form
+                method="POST"
+                action="/jennflix/queue"
+                hx-post="/jennflix/queue"
+                hx-target="#applet"
+                hx-push-url="false"
+                class="contents"
+            >
                 <input type="hidden" name="title_id" value="{{ id }}">
                 <button
-                    class="btn btn-sm btn-outline text-green-600 min-h-11 text-sm {{ my_list_btn_class }}"
+                    class="btn btn-sm min-h-11 text-sm {{ my_list_btn_class }}"
                     {{ my_list_disabled }}
                     type="submit"
                 >
@@ -43,14 +55,6 @@
                 class="btn btn-sm btn-ghost min-h-11 text-sm text-white"
                 >Edit</a
             >
-            <form method="POST" action="/jennflix/titles/{{ id }}/delete">
-                <button
-                    class="btn btn-sm btn-outline text-red-600 border-red-600 min-h-11 text-sm js-title-delete-btn w-full"
-                    type="submit"
-                >
-                    Delete
-                </button>
-            </form>
         </div>
     </div>
 </details>

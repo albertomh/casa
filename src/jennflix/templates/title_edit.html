@@ -1,11 +1,28 @@
-<div class="min-h-screen flex justify-center bg-base-200">
+<div class="min-h-screen flex justify-center items-start bg-base-200 py-6">
     <div class="card bg-base-100 shadow w-full max-w-sm">
         <div class="card-body gap-4">
-            <h2 class="text-2xl font-bold mb-2">Edit title</h2>
+            <div class="flex justify-between">
+                <h2 class="text-2xl font-bold mb-2">Edit title</h2>
+                <form
+                    method="POST"
+                    action="/jennflix/titles/{{ id }}/delete"
+                    hx-post="/jennflix/titles/{{ id }}/delete"
+                    hx-target="#applet"
+                    hx-push-url="false"
+                    data-delete-confirm-scope
+                >
+                    <button
+                        class="btn btn-sm btn-outline text-red-600 border-red-600 rounded-md uppercase w-40 px-4 js-title-delete-btn"
+                        type="submit"
+                    >
+                        Delete
+                    </button>
+                </form>
+            </div>
             <form
                 method="POST"
                 action="/jennflix/titles/{{ id }}/edit"
-                class="mb-4 flex flex-col gap-2"
+                class="flex flex-col gap-2"
             >
                 <input
                     name="title"
@@ -25,6 +42,12 @@
                     name="tags"
                     placeholder="Tags"
                     value="{{ tags }}"
+                    class="input input-bordered w-full"
+                >
+                <input
+                    name="location"
+                    placeholder="Location"
+                    value="{{ location }}"
                     class="input input-bordered w-full"
                 >
                 <input

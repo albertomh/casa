@@ -13,6 +13,7 @@ export type JennflixTitle = {
     title: string;
     poster_path: string;
     imdb_url: string;
+    location: string;
     tags: string;
 };
 
@@ -43,13 +44,15 @@ export class JennflixRepository {
         title: string,
         posterPath: string,
         imdbUrl: string,
+        location: string,
         tags: string,
     ): number {
         this.sql.exec(
-            "INSERT INTO jennflix__title (title, poster_path, imdb_url, tags) VALUES (?, ?, ?, ?)",
+            "INSERT INTO jennflix__title (title, poster_path, imdb_url, location, tags) VALUES (?, ?, ?, ?, ?)",
             title,
             posterPath,
             imdbUrl,
+            location,
             tags,
         );
         return this.sql.exec("SELECT last_insert_rowid() as id").one()
@@ -61,13 +64,15 @@ export class JennflixRepository {
         title: string,
         posterPath: string,
         imdbUrl: string,
+        location: string,
         tags: string,
     ) {
         this.sql.exec(
-            "UPDATE jennflix__title SET title = ?, poster_path = ?, imdb_url = ?, tags = ? WHERE id = ?",
+            "UPDATE jennflix__title SET title = ?, poster_path = ?, imdb_url = ?, location = ?, tags = ? WHERE id = ?",
             title,
             posterPath,
             imdbUrl,
+            location,
             tags,
             id,
         );
@@ -209,9 +214,10 @@ export class JennflixRenderer {
         const values: Record<string, string> = {
             "{{ id }}": utils.escape(title.id),
             "{{ title }}": utils.escape(title.title),
-            "{{ imdb_url }}": utils.escape(title.imdb_url),
-            "{{ tags }}": utils.escape(title.tags ?? ""),
             "{{ poster_path }}": utils.escape(title.poster_path ?? ""),
+            "{{ imdb_url }}": utils.escape(title.imdb_url),
+            "{{ location }}": utils.escape(title.location ?? ""),
+            "{{ tags }}": utils.escape(title.tags ?? ""),
         };
         return EditTitleHtml.replace(
             /\{\{ [\w]+ \}\}/g,
@@ -223,15 +229,17 @@ export class JennflixRenderer {
         const values: Record<string, string> = {
             "{{ id }}": utils.escape(title.id),
             "{{ title }}": utils.escape(title.title),
-            "{{ imdb_url }}": utils.escape(title.imdb_url),
-            "{{ tags }}": utils.escape(title.tags ?? ""),
             "{{ poster_path }}": title.poster_path
                 ? `${utils.escape(title.poster_path)}`
                 : "",
+            "{{ imdb_url }}": utils.escape(title.imdb_url),
+            "{{ location }}": utils.escape(title.location ?? ""),
+            "{{ location_badge_class }}": title.location ? "" : "hidden",
+            "{{ tags }}": utils.escape(title.tags ?? ""),
             "{{ my_list_disabled }}": isQueued ? "disabled" : "",
             "{{ my_list_btn_class }}": isQueued
-                ? "btn-disabled opacity-90"
-                : "border-green-600",
+                ? "border-green-700 text-green-700"
+                : "border-green-700 bg-green-700 text-white",
             "{{ my_list_icon }}": isQueued
                 ? '<i class="bi bi-check2"></i>'
                 : '<i class="bi bi-plus-lg"></i>',

@@ -3,6 +3,9 @@
         <form
             method="POST"
             action="/jennflix/queue/{{ queue_id }}/move"
+            hx-post="/jennflix/queue/{{ queue_id }}/move"
+            hx-target="#applet"
+            hx-push-url="false"
             class="inline"
         >
             <input type="hidden" name="direction" value="up">
@@ -17,6 +20,9 @@
         <form
             method="POST"
             action="/jennflix/queue/{{ queue_id }}/move"
+            hx-post="/jennflix/queue/{{ queue_id }}/move"
+            hx-target="#applet"
+            hx-push-url="false"
             class="inline"
         >
             <input type="hidden" name="direction" value="down">
@@ -37,6 +43,9 @@
     <form
         method="POST"
         action="/jennflix/queue/{{ queue_id }}/watched"
+        hx-post="/jennflix/queue/{{ queue_id }}/watched"
+        hx-target="#applet"
+        hx-push-url="false"
         class="shrink-0 ml-auto sm:ml-0"
     >
         <button

@@ -38,6 +38,7 @@ const MIGRATIONS = [
                 title TEXT NOT NULL,
                 poster_path TEXT,
                 imdb_url TEXT NOT NULL,
+                location TEXT,
                 tags TEXT
             );
         `,

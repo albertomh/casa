@@ -69,29 +69,31 @@ details.collapse-arrow[open] > .collapse-title::after {
             const deleteButton = event.target.closest(".js-title-delete-btn");
             if (!deleteButton) return;
 
-            const card = deleteButton.closest("details[data-title-card]");
-            if (!card) return;
+            const scope =
+                deleteButton.closest("[data-delete-confirm-scope]") ??
+                deleteButton.closest("form");
+            if (!scope) return;
 
-            if (card.dataset.pendingDelete === "true") {
-                card.dataset.pendingDelete = "false";
-                clearTimeout(deleteTimers.get(card));
-                deleteTimers.delete(card);
+            if (scope.dataset.pendingDelete === "true") {
+                scope.dataset.pendingDelete = "false";
+                clearTimeout(deleteTimers.get(scope));
+                deleteTimers.delete(scope);
                 deleteButton.textContent = "Delete";
                 return;
             }
 
             event.preventDefault();
             event.stopPropagation();
-            card.dataset.pendingDelete = "true";
+            scope.dataset.pendingDelete = "true";
             deleteButton.innerHTML =
                 '<i class="bi bi-trash3-fill text-red-600"></i> Delete forever';
 
             const timer = setTimeout(() => {
-                card.dataset.pendingDelete = "false";
+                scope.dataset.pendingDelete = "false";
                 deleteButton.innerHTML = "Delete";
-                deleteTimers.delete(card);
+                deleteTimers.delete(scope);
             }, 5000);
-            deleteTimers.set(card, timer);
+            deleteTimers.set(scope, timer);
         },
         true,
     );

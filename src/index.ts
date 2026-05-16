@@ -186,19 +186,22 @@ export class CasaDurableObject extends DurableObject<Env> {
         title: string,
         posterPath: string,
         imdbUrl: string,
+        location: string,
         tags: string,
     ): Promise<Response> {
         if (!title || !imdbUrl) {
             return new Response("Title and IMDB URL required", { status: 422 });
         }
-        this.jennflix.addTitle(title, posterPath, imdbUrl, tags);
+        this.jennflix.addTitle(title, posterPath, imdbUrl, location, tags);
         return this.renderJennflix();
     }
 
     async jennflix_addToQueue(title_id: number): Promise<Response> {
         if (!title_id) return new Response("Missing title_id", { status: 422 });
         this.jennflix.addToQueue(title_id);
-        return this.renderJennflix();
+        const response = this.renderJennflix("/jennflix");
+        response.headers.set("HX-Replace-Url", "/jennflix");
+        return response;
     }
 
     async jennflix_editTitleForm(
@@ -221,18 +224,28 @@ export class CasaDurableObject extends DurableObject<Env> {
         title: string,
         poster_path: string,
         imdb_url: string,
+        location: string,
         tags: string,
     ): Promise<Response> {
         if (!title || !imdb_url) {
             return new Response("Title and IMDB URL required", { status: 422 });
         }
-        this.jennflix.updateTitle(id, title, poster_path, imdb_url, tags);
+        this.jennflix.updateTitle(
+            id,
+            title,
+            poster_path,
+            imdb_url,
+            location,
+            tags,
+        );
         return this.renderJennflix();
     }
 
     async jennflix_deleteTitle(id: number): Promise<Response> {
         this.jennflix.deleteTitle(id);
-        return this.renderJennflix();
+        const response = this.renderJennflix("/jennflix");
+        response.headers.set("HX-Replace-Url", "/jennflix");
+        return response;
     }
 
     async jennflix_moveQueueItem(
@@ -243,12 +256,16 @@ export class CasaDurableObject extends DurableObject<Env> {
             return new Response("Invalid direction", { status: 422 });
         }
         this.jennflix.moveQueueItem(id, direction);
-        return this.renderJennflix();
+        const response = this.renderJennflix("/jennflix");
+        response.headers.set("HX-Replace-Url", "/jennflix");
+        return response;
     }
 
     async jennflix_markWatched(id: number): Promise<Response> {
         this.jennflix.markWatched(id);
-        return this.renderJennflix();
+        const response = this.renderJennflix("/jennflix");
+        response.headers.set("HX-Replace-Url", "/jennflix");
+        return response;
     }
 }
 
@@ -453,6 +470,7 @@ export default {
                     String(form.get("title") ?? "").trim(),
                     String(form.get("poster_path") ?? "").trim(),
                     String(form.get("imdb_url") ?? "").trim(),
+                    String(form.get("location") ?? "").trim(),
                     String(form.get("tags") ?? "").trim(),
                 ),
             );
@@ -476,6 +494,7 @@ export default {
                         String(form.get("title") ?? "").trim(),
                         String(form.get("poster_path") ?? "").trim(),
                         String(form.get("imdb_url") ?? "").trim(),
+                        String(form.get("location") ?? "").trim(),
                         String(form.get("tags") ?? "").trim(),
                     ),
                 );
