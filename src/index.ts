@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
 import { runMigrations } from "./db";
 import { type Freezer, FreezerRenderer, FreezerRepository } from "./freezer";
-import NewFreezerHtml from "./freezer/templates/new_freezer.html";
+import NewFreezerHtml from "./freezer/templates/freezer_new.html";
 import { JennflixRenderer, JennflixRepository } from "./jennflix";
 import FreezerHtml from "./templates/freezer.html";
 import HomeHtml from "./templates/home.html";
