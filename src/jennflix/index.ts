@@ -121,11 +121,6 @@ export class JennflixRepository {
         );
     }
 
-    removeFromQueue(id: number) {
-        this.sql.exec("DELETE FROM jennflix__queue WHERE id = ?", id);
-        this.reindexQueue();
-    }
-
     markWatched(queue_id: number) {
         const row = this.sql
             .exec("SELECT title_id FROM jennflix__queue WHERE id = ?", queue_id)
@@ -136,7 +131,8 @@ export class JennflixRepository {
                 row.title_id,
             );
         }
-        this.removeFromQueue(queue_id);
+        this.sql.exec("DELETE FROM jennflix__queue WHERE id = ?", queue_id);
+        this.reindexQueue();
     }
 
     moveQueueItem(id: number, direction: "up" | "down") {

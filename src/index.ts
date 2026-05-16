@@ -197,11 +197,6 @@ export class CasaDurableObject extends DurableObject<Env> {
         return this.renderJennflix();
     }
 
-    async jennflix_removeFromQueue(id: number): Promise<Response> {
-        this.jennflix.removeFromQueue(id);
-        return this.renderJennflix();
-    }
-
     async jennflix_editTitleForm(
         id: number,
         urlPathname = "",
@@ -503,13 +498,6 @@ export default {
         );
         if (watchedQueueMatch && request.method === "POST") {
             return stub.jennflix_markWatched(Number(watchedQueueMatch[1]));
-        }
-
-        const removeQueueMatch = url.pathname.match(
-            /^\/jennflix\/queue\/(\d+)\/remove$/,
-        );
-        if (removeQueueMatch && request.method === "POST") {
-            return stub.jennflix_removeFromQueue(Number(removeQueueMatch[1]));
         }
 
         return new Response("Not found", { status: 404 });
