@@ -1,6 +1,8 @@
-<div class="px-4">
-    <h3 class="text-lg font-semibold mt-4 mb-1">My List</h3>
-    <ul class="list-decimal ml-6">
-        {{ queue }}
-    </ul>
-</div>
+<details class="collapse collapse-arrow bg-base-200 rounded-box" open>
+    <summary class="collapse-title text-lg font-semibold py-0">My List</summary>
+    <div class="collapse-content pb-0">
+        <ul class="list-decimal w-full">
+            {{ queue }}
+        </ul>
+    </div>
+</details>

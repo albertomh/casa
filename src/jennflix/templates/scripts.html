@@ -25,6 +25,10 @@ details[data-title-card] > summary::-webkit-details-marker {
 details[data-title-card][open] .js-title-actions {
     display: flex;
 }
+
+details.collapse-arrow[open] > .collapse-title::after {
+    transform: translateY(-50%) rotate(225deg);
+}
 </style>
 
 <script id="applet-scripts" hx-swap-oob="true">
