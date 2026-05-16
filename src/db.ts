@@ -50,6 +50,8 @@ const MIGRATIONS = [
                 title_id INTEGER NOT NULL REFERENCES jennflix__title(id),
                 position INTEGER DEFAULT 0
             );
+            CREATE UNIQUE INDEX IF NOT EXISTS jennflix__queue_title_id_unique
+            ON jennflix__queue(title_id);
         `,
     },
     {

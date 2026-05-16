@@ -16,9 +16,9 @@
         </div>
     </summary>
     <div
-        class="js-title-actions pointer-events-none absolute inset-0 hidden flex-col justify-end gap-3 bg-black/70 p-3"
+        class="js-title-actions pointer-events-none absolute inset-0 hidden flex-col justify-between gap-3 bg-black/80 p-3"
     >
-        <div class="grid grid-cols-1 gap-2 pointer-events-auto">
+        <div class="grid grid-cols-1 gap-2 h-full pointer-events-auto">
             <a
                 href="{{ imdb_url }}"
                 target="_blank"
@@ -29,11 +29,12 @@
             <form method="POST" action="/jennflix/queue" class="contents">
                 <input type="hidden" name="title_id" value="{{ id }}">
                 <button
-                    class="btn btn-sm btn-primary min-h-11 text-sm"
+                    class="btn btn-sm btn-outline text-green-600 min-h-11 text-sm {{ my_list_btn_class }}"
+                    {{ my_list_disabled }}
                     type="submit"
                 >
-                    <i class="bi bi-plus-lg"></i>
-                    My List
+                    {{ my_list_icon }}
+                    {{ my_list_label }}
                 </button>
             </form>
             <a

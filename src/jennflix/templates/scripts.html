@@ -32,6 +32,33 @@ details[data-title-card][open] .js-title-actions {
     const buttonId = "jennflix-header-add-title-btn";
     const deleteTimers = new WeakMap();
 
+    const getButton = () => document.getElementById(buttonId);
+
+    const setVisibility = (pathname) => {
+        const button = getButton();
+        if (!button) return;
+        if (pathname.includes("/jennflix/titles/new")) {
+            button.classList.add("invisible");
+        } else {
+            button.classList.remove("invisible");
+        }
+    };
+
+    const pathnameFromEvent = (event) => {
+        const responseUrl = event?.detail?.xhr?.responseURL;
+        return responseUrl
+            ? new URL(responseUrl).pathname
+            : window.location.pathname;
+    };
+
+    document.addEventListener("htmx:afterOnLoad", (event) => {
+        setVisibility(pathnameFromEvent(event));
+    });
+
+    document.addEventListener("htmx:historyRestore", (event) => {
+        setVisibility(pathnameFromEvent(event));
+    });
+
     document.addEventListener(
         "click",
         (event) => {

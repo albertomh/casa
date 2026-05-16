@@ -41,15 +41,15 @@ export class JennflixRepository {
 
     addTitle(
         title: string,
-        poster_path: string,
-        imdb_url: string,
+        posterPath: string,
+        imdbUrl: string,
         tags: string,
     ): number {
         this.sql.exec(
             "INSERT INTO jennflix__title (title, poster_path, imdb_url, tags) VALUES (?, ?, ?, ?)",
             title,
-            poster_path,
-            imdb_url,
+            posterPath,
+            imdbUrl,
             tags,
         );
         return this.sql.exec("SELECT last_insert_rowid() as id").one()
@@ -59,15 +59,15 @@ export class JennflixRepository {
     updateTitle(
         id: number,
         title: string,
-        poster_path: string,
-        imdb_url: string,
+        posterPath: string,
+        imdbUrl: string,
         tags: string,
     ) {
         this.sql.exec(
             "UPDATE jennflix__title SET title = ?, poster_path = ?, imdb_url = ?, tags = ? WHERE id = ?",
             title,
-            poster_path,
-            imdb_url,
+            posterPath,
+            imdbUrl,
             tags,
             id,
         );
@@ -85,19 +85,40 @@ export class JennflixRepository {
     }
 
     addToQueue(title_id: number): number {
+        const existing = this.getQueueItemByTitleId(title_id);
+        if (existing) {
+            return existing.id;
+        }
         const maxPos =
             (this.sql
                 .exec(
                     "SELECT COALESCE(MAX(position), -1) as m FROM jennflix__queue",
                 )
                 .one().m as number) ?? -1;
-        this.sql.exec(
-            "INSERT INTO jennflix__queue (title_id, position) VALUES (?, ?)",
-            title_id,
-            maxPos + 1,
-        );
+        try {
+            this.sql.exec(
+                "INSERT INTO jennflix__queue (title_id, position) VALUES (?, ?)",
+                title_id,
+                maxPos + 1,
+            );
+        } catch {
+            const queued = this.getQueueItemByTitleId(title_id);
+            if (queued) return queued.id;
+            throw new Error("Unable to add title to queue");
+        }
         return this.sql.exec("SELECT last_insert_rowid() as id").one()
             .id as number;
+    }
+
+    getQueueItemByTitleId(title_id: number): JennflixQueue | null {
+        return (
+            (this.sql
+                .exec(
+                    "SELECT * FROM jennflix__queue WHERE title_id = ?",
+                    title_id,
+                )
+                .toArray()[0] as JennflixQueue) ?? null
+        );
     }
 
     removeFromQueue(id: number) {
@@ -196,7 +217,7 @@ export class JennflixRenderer {
         );
     }
 
-    titleItem(title: JennflixTitle): string {
+    titleItem(title: JennflixTitle, isQueued: boolean): string {
         const values: Record<string, string> = {
             "{{ id }}": utils.escape(title.id),
             "{{ title }}": utils.escape(title.title),
@@ -205,6 +226,14 @@ export class JennflixRenderer {
             "{{ poster_path }}": title.poster_path
                 ? `${utils.escape(title.poster_path)}`
                 : "",
+            "{{ my_list_disabled }}": isQueued ? "disabled" : "",
+            "{{ my_list_btn_class }}": isQueued
+                ? "btn-disabled opacity-90"
+                : "border-green-600",
+            "{{ my_list_icon }}": isQueued
+                ? '<i class="bi bi-check2"></i>'
+                : '<i class="bi bi-plus-lg"></i>',
+            "{{ my_list_label }}": isQueued ? "In My List" : "My List",
         };
         return TitleItemHtml.replace(
             /\{\{ [\w]+ \}\}/g,
@@ -242,8 +271,10 @@ export class JennflixRenderer {
         return AllQueueHtml.replace("{{ queue }}", queueHtml);
     }
 
-    titles(titles: JennflixTitle[]): string {
-        const titlesHtml = titles.map((t) => this.titleItem(t)).join("");
+    titles(titles: JennflixTitle[], queuedTitleIds: Set<number>): string {
+        const titlesHtml = titles
+            .map((t) => this.titleItem(t, queuedTitleIds.has(t.id)))
+            .join("");
         return AllTitlesHtml.replace("{{ titles }}", titlesHtml);
     }
 }

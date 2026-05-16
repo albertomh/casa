@@ -154,11 +154,12 @@ export class CasaDurableObject extends DurableObject<Env> {
     private renderJennflix(urlPathname = ""): Response {
         const titles = this.jennflix.listTitles();
         const queue = this.jennflix.listQueue();
+        const queuedTitleIds = new Set(queue.map((item) => item.title_id));
         const html =
             this.jennflixRenderer.scripts() +
             this.jennflixRenderer.header(urlPathname) +
             this.jennflixRenderer.queue(titles, queue) +
-            this.jennflixRenderer.titles(titles);
+            this.jennflixRenderer.titles(titles, queuedTitleIds);
 
         return new Response(html, {
             headers: { "Content-Type": "text/html" },
@@ -179,14 +180,14 @@ export class CasaDurableObject extends DurableObject<Env> {
 
     async jennflix_addTitle(
         title: string,
-        imdb_url: string,
+        posterPath: string,
+        imdbUrl: string,
         tags: string,
-        poster: string,
     ): Promise<Response> {
-        if (!title || !imdb_url) {
+        if (!title || !imdbUrl) {
             return new Response("Title and IMDB URL required", { status: 422 });
         }
-        this.jennflix.addTitle(title, imdb_url, tags, poster);
+        this.jennflix.addTitle(title, posterPath, imdbUrl, tags);
         return this.renderJennflix();
     }
 
@@ -444,8 +445,8 @@ export default {
             return stub.jennflix_addTitle(
                 String(form.get("title") ?? "").trim(),
                 String(form.get("poster_path") ?? "").trim(),
-                String(form.get("tags") ?? "").trim(),
                 String(form.get("imdb_url") ?? "").trim(),
+                String(form.get("tags") ?? "").trim(),
             );
         }
 
