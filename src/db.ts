@@ -35,9 +35,9 @@ const MIGRATIONS = [
         sql: `
             CREATE TABLE IF NOT EXISTS jennflix__title(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
+                title TEXT NOT NULL UNIQUE,
                 poster_path TEXT,
-                imdb_url TEXT NOT NULL,
+                imdb_url TEXT NOT NULL UNIQUE,
                 media_type TEXT NOT NULL,
                 location TEXT,
                 tags TEXT
