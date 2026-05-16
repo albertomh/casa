@@ -1,0 +1,54 @@
+<div class="min-h-screen flex justify-center items-start bg-base-200 py-6">
+    <div class="card bg-base-100 shadow w-full max-w-sm">
+        <div class="card-body gap-4">
+            <h2 class="text-2xl mb-2">Add new title</h2>
+            <form
+                method="POST"
+                action="/jennflix/titles"
+                class="mb-4 flex flex-col gap-2"
+            >
+                <input
+                    name="title"
+                    placeholder="Title"
+                    required
+                    class="input input-bordered w-full"
+                >
+                <input
+                    name="imdb_url"
+                    placeholder="IMDB URL"
+                    required
+                    class="input input-bordered w-full"
+                >
+                <input
+                    name="tags"
+                    placeholder="Tags"
+                    class="input input-bordered w-full"
+                >
+                <input
+                    name="location"
+                    placeholder="Location"
+                    class="input input-bordered w-full"
+                >
+                <input
+                    name="poster_path"
+                    placeholder="/jennflix/posters/firefly.jpg"
+                    class="input input-bordered w-full"
+                >
+                <div class="flex items-center justify-between gap-3 pt-2">
+                    <a
+                        href="/jennflix"
+                        class="btn btn-sm btn-outline border-gray-400 text-gray-600 rounded-md uppercase w-auto px-4"
+                    >
+                        Cancel
+                    </a>
+                    <button
+                        type="submit"
+                        class="btn btn-sm bg-red-600 text-white rounded-md uppercase self-end w-auto px-4"
+                    >
+                        Add
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

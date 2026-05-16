@@ -2,7 +2,8 @@ import { DurableObject } from "cloudflare:workers";
 import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
 import { runMigrations } from "./db";
 import { type Freezer, FreezerRenderer, FreezerRepository } from "./freezer";
-import NewFreezerHtml from "./freezer/templates/new_freezer.html";
+import NewFreezerHtml from "./freezer/templates/freezer_new.html";
+import { JennflixRenderer, JennflixRepository } from "./jennflix";
 import FreezerHtml from "./templates/freezer.html";
 import HomeHtml from "./templates/home.html";
 import HomeContentHtml from "./templates/home_content.html";
@@ -26,6 +27,8 @@ const DURABLE_OBJECT_NAME = "casa";
 export class CasaDurableObject extends DurableObject<Env> {
     freezer: FreezerRepository;
     freezerRenderer: FreezerRenderer;
+    jennflix: JennflixRepository;
+    jennflixRenderer: JennflixRenderer;
 
     constructor(ctx: DurableObjectState, env: Env) {
         super(ctx, env);
@@ -35,7 +38,12 @@ export class CasaDurableObject extends DurableObject<Env> {
 
         this.freezer = new FreezerRepository(sql);
         this.freezerRenderer = new FreezerRenderer();
+        this.jennflix = new JennflixRepository(sql);
+        this.jennflixRenderer = new JennflixRenderer();
     }
+
+    // -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
 
     private freezer_getActive(): Freezer | null {
         return this.freezer.getFirstFreezer();
@@ -139,6 +147,126 @@ export class CasaDurableObject extends DurableObject<Env> {
 
         return this.renderFreezer(freezer.id);
     }
+
+    // -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
+
+    private renderJennflix(urlPathname = ""): Response {
+        const titles = this.jennflix.listTitles();
+        const queue = this.jennflix.listQueue();
+        const queuedTitleIds = new Set(queue.map((item) => item.title_id));
+        const html =
+            this.jennflixRenderer.scripts() +
+            this.jennflixRenderer.applet(
+                this.jennflixRenderer.header(urlPathname) +
+                    this.jennflixRenderer.queue(titles, queue) +
+                    this.jennflixRenderer.titles(titles, queuedTitleIds),
+            );
+
+        return new Response(html, {
+            headers: { "Content-Type": "text/html" },
+        });
+    }
+
+    async jennflixUi(urlPathname: string): Promise<Response> {
+        return this.renderJennflix(urlPathname);
+    }
+
+    async jennflix_newTitleForm(urlPathname: string): Promise<Response> {
+        const html =
+            this.jennflixRenderer.scripts() +
+            this.jennflixRenderer.applet(
+                this.jennflixRenderer.header(urlPathname) +
+                    this.jennflixRenderer.newTitleForm(),
+            );
+        return new Response(html, { headers: { "Content-Type": "text/html" } });
+    }
+
+    async jennflix_addTitle(
+        title: string,
+        posterPath: string,
+        imdbUrl: string,
+        location: string,
+        tags: string,
+    ): Promise<Response> {
+        if (!title || !imdbUrl) {
+            return new Response("Title and IMDB URL required", { status: 422 });
+        }
+        this.jennflix.addTitle(title, posterPath, imdbUrl, location, tags);
+        return this.renderJennflix();
+    }
+
+    async jennflix_addToQueue(title_id: number): Promise<Response> {
+        if (!title_id) return new Response("Missing title_id", { status: 422 });
+        this.jennflix.addToQueue(title_id);
+        const response = this.renderJennflix("/jennflix");
+        response.headers.set("HX-Replace-Url", "/jennflix");
+        return response;
+    }
+
+    async jennflix_editTitleForm(
+        id: number,
+        urlPathname = "",
+    ): Promise<Response> {
+        const title = this.jennflix.getTitle(id);
+        if (!title) return new Response("Not found", { status: 404 });
+        const html =
+            this.jennflixRenderer.scripts() +
+            this.jennflixRenderer.applet(
+                this.jennflixRenderer.header(urlPathname) +
+                    this.jennflixRenderer.editTitleForm(title),
+            );
+        return new Response(html, { headers: { "Content-Type": "text/html" } });
+    }
+
+    async jennflix_updateTitle(
+        id: number,
+        title: string,
+        poster_path: string,
+        imdb_url: string,
+        location: string,
+        tags: string,
+    ): Promise<Response> {
+        if (!title || !imdb_url) {
+            return new Response("Title and IMDB URL required", { status: 422 });
+        }
+        this.jennflix.updateTitle(
+            id,
+            title,
+            poster_path,
+            imdb_url,
+            location,
+            tags,
+        );
+        return this.renderJennflix();
+    }
+
+    async jennflix_deleteTitle(id: number): Promise<Response> {
+        this.jennflix.deleteTitle(id);
+        const response = this.renderJennflix("/jennflix");
+        response.headers.set("HX-Replace-Url", "/jennflix");
+        return response;
+    }
+
+    async jennflix_moveQueueItem(
+        id: number,
+        direction: "up" | "down",
+    ): Promise<Response> {
+        if (direction !== "up" && direction !== "down") {
+            return new Response("Invalid direction", { status: 422 });
+        }
+        this.jennflix.moveQueueItem(id, direction);
+        const response = this.renderJennflix("/jennflix");
+        response.headers.set("HX-Replace-Url", "/jennflix");
+        return response;
+    }
+
+    async jennflix_markWatched(id: number): Promise<Response> {
+        this.jennflix.markWatched(id);
+        const response = this.renderJennflix("/jennflix");
+        response.headers.set("HX-Replace-Url", "/jennflix");
+        return response;
+    }
 }
 
 function isFromAllowedCountry(
@@ -150,7 +278,7 @@ function isFromAllowedCountry(
     return !!country && allowedCountries.includes(country);
 }
 
-async function botHoneypot(form: FormData): Promise<Response | void> {
+async function botHoneypot(form: FormData): Promise<Response | undefined> {
     if (form.get("_email")) {
         return new Response("Bad request", { status: 400 });
     }
@@ -188,6 +316,36 @@ export default {
                 "<!--CONTENT-->",
                 content,
             );
+        const respondJennflix = async (
+            contentPromise: Promise<Response>,
+        ): Promise<Response> => {
+            const content = await contentPromise;
+            if (isHtmx) return content;
+
+            const html = await content.text();
+            const headers = new Headers(content.headers);
+            headers.set("Content-Type", "text/html");
+
+            return new Response(htmlShell(html), {
+                headers,
+                status: content.status,
+            });
+        };
+
+        // -----------------------------------------------------------------------------------
+        // STATIC ASSETS
+        // -----------------------------------------------------------------------------------
+
+        if (
+            url.pathname.startsWith("/posters/") ||
+            url.pathname.startsWith("/static/") ||
+            url.pathname === "/favicon.ico"
+        ) {
+            return env.ASSETS.fetch(request);
+        }
+
+        // -----------------------------------------------------------------------------------
+        // -----------------------------------------------------------------------------------
 
         if (url.pathname === "/") {
             if (isHtmx) {
@@ -200,6 +358,9 @@ export default {
             });
         }
 
+        // -----------------------------------------------------------------------------------
+        // -----------------------------------------------------------------------------------
+
         if (url.pathname === "/freezer/qr") {
             const qrUrl = `${url.origin}/freezer`;
             const html = FreezerQrHtml.replaceAll("<!--QR_URL-->", qrUrl);
@@ -208,7 +369,7 @@ export default {
             });
         }
 
-        if (url.pathname === "/freezer") {
+        if (["/freezer", "/freezer/"].includes(url.pathname)) {
             if (isHtmx) {
                 return new Response(FreezerHtml, {
                     headers: { "Content-Type": "text/html" },
@@ -282,6 +443,99 @@ export default {
             return stub.freezer_moveItemToTray(
                 Number(moveMatch[1]),
                 Number(form.get("tray_id")),
+            );
+        }
+
+        // -----------------------------------------------------------------------------------
+        // -----------------------------------------------------------------------------------
+
+        if (
+            ["/jennflix", "/jennflix/"].includes(url.pathname) &&
+            request.method === "GET"
+        ) {
+            return respondJennflix(stub.jennflixUi(url.pathname));
+        }
+
+        if (
+            url.pathname === "/jennflix/titles/new" &&
+            request.method === "GET"
+        ) {
+            return respondJennflix(stub.jennflix_newTitleForm(url.pathname));
+        }
+
+        if (url.pathname === "/jennflix/titles" && request.method === "POST") {
+            const form = await request.formData();
+            return respondJennflix(
+                stub.jennflix_addTitle(
+                    String(form.get("title") ?? "").trim(),
+                    String(form.get("poster_path") ?? "").trim(),
+                    String(form.get("imdb_url") ?? "").trim(),
+                    String(form.get("location") ?? "").trim(),
+                    String(form.get("tags") ?? "").trim(),
+                ),
+            );
+        }
+
+        const editTitleMatch = url.pathname.match(
+            /^\/jennflix\/titles\/(\d+)\/edit$/,
+        );
+        if (editTitleMatch) {
+            const id = Number(editTitleMatch[1]);
+            if (request.method === "GET") {
+                return respondJennflix(
+                    stub.jennflix_editTitleForm(id, url.pathname),
+                );
+            }
+            if (request.method === "POST") {
+                const form = await request.formData();
+                return respondJennflix(
+                    stub.jennflix_updateTitle(
+                        id,
+                        String(form.get("title") ?? "").trim(),
+                        String(form.get("poster_path") ?? "").trim(),
+                        String(form.get("imdb_url") ?? "").trim(),
+                        String(form.get("location") ?? "").trim(),
+                        String(form.get("tags") ?? "").trim(),
+                    ),
+                );
+            }
+        }
+
+        const deleteTitleMatch = url.pathname.match(
+            /^\/jennflix\/titles\/(\d+)\/delete$/,
+        );
+        if (deleteTitleMatch && request.method === "POST") {
+            return respondJennflix(
+                stub.jennflix_deleteTitle(Number(deleteTitleMatch[1])),
+            );
+        }
+
+        if (url.pathname === "/jennflix/queue" && request.method === "POST") {
+            const form = await request.formData();
+            return respondJennflix(
+                stub.jennflix_addToQueue(Number(form.get("title_id"))),
+            );
+        }
+
+        const moveQueueMatch = url.pathname.match(
+            /^\/jennflix\/queue\/(\d+)\/move$/,
+        );
+        if (moveQueueMatch && request.method === "POST") {
+            const form = await request.formData();
+            return respondJennflix(
+                stub.jennflix_moveQueueItem(
+                    Number(moveQueueMatch[1]),
+                    String(form.get("direction")) as "up" | "down",
+                ),
+            );
+        }
+
+        const watchedQueueMatch = url.pathname.match(
+            /^\/jennflix\/queue\/(\d+)\/watched$/,
+        );
+        if (watchedQueueMatch && request.method === "POST") {
+            return respondJennflix(
+                stub.jennflix_markWatched(Number(watchedQueueMatch[1])),
             );
         }
 

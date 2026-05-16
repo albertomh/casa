@@ -1,28 +1,28 @@
 <div class="min-h-screen flex justify-center bg-base-200">
     <div class="card bg-base-100 shadow w-full max-w-sm">
         <div class="card-body gap-4">
-            <h2 class="card-title tiny5-regular text-info uppercase">
+            <h2 class="card-title font-tiny5-regular text-info uppercase">
                 Add new freezer
             </h2>
             <form
                 hx-post="/freezers"
                 hx-target="body"
                 hx-swap="innerHTML"
-                class="flex flex-col gap-3"
+                class="mb-4 flex flex-col gap-2"
             >
                 <input
                     name="label"
                     placeholder="Freezer label"
-                    class="input input-bordered w-full"
                     required
+                    class="input input-bordered w-full"
                 >
                 <input
                     name="tray_count"
                     type="number"
                     min="1"
                     placeholder="Number of trays"
-                    class="input input-bordered w-full"
                     required
+                    class="input input-bordered w-full"
                 >
                 <button
                     type="submit"

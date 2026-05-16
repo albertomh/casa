@@ -1,0 +1,107 @@
+<style id="applet-styles" hx-swap-oob="true">
+.font-inter-regular {
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-style: normal;
+}
+
+details[data-title-card] > summary::-webkit-details-marker {
+    display: none;
+}
+
+details[data-title-card][open] .js-title-actions {
+    display: flex;
+}
+
+details.collapse-arrow[open] > .collapse-title::after {
+    transform: translateY(-50%) rotate(225deg);
+}
+</style>
+
+<script id="applet-scripts" hx-swap-oob="true">
+(() => {
+    const buttonId = "jennflix-header-add-title-btn";
+    const deleteTimers = new WeakMap();
+
+    const getButton = () => document.getElementById(buttonId);
+
+    const setVisibility = (pathname) => {
+        const button = getButton();
+        if (!button) return;
+        if (pathname.includes("/jennflix/titles/new")) {
+            button.classList.add("invisible");
+        } else {
+            button.classList.remove("invisible");
+        }
+    };
+
+    const pathnameFromEvent = (event) => {
+        const responseUrl = event?.detail?.xhr?.responseURL;
+        return responseUrl
+            ? new URL(responseUrl).pathname
+            : window.location.pathname;
+    };
+
+    document.addEventListener("htmx:afterOnLoad", (event) => {
+        setVisibility(pathnameFromEvent(event));
+    });
+
+    document.addEventListener("htmx:historyRestore", (event) => {
+        setVisibility(pathnameFromEvent(event));
+    });
+
+    document.addEventListener(
+        "click",
+        (event) => {
+            const deleteButton = event.target.closest(".js-title-delete-btn");
+            if (!deleteButton) return;
+
+            const scope =
+                deleteButton.closest("[data-delete-confirm-scope]") ??
+                deleteButton.closest("form");
+            if (!scope) return;
+
+            if (scope.dataset.pendingDelete === "true") {
+                scope.dataset.pendingDelete = "false";
+                clearTimeout(deleteTimers.get(scope));
+                deleteTimers.delete(scope);
+                deleteButton.textContent = "Delete";
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            scope.dataset.pendingDelete = "true";
+            deleteButton.innerHTML =
+                '<i class="bi bi-trash3-fill text-red-600"></i> Delete forever';
+
+            const timer = setTimeout(() => {
+                scope.dataset.pendingDelete = "false";
+                deleteButton.innerHTML = "Delete";
+                deleteTimers.delete(scope);
+            }, 5000);
+            deleteTimers.set(scope, timer);
+        },
+        true,
+    );
+
+    window.addEventListener("popstate", () => {
+        setVisibility(window.location.pathname);
+    });
+
+    setVisibility(window.location.pathname);
+})();
+</script>

@@ -39,6 +39,15 @@ repo = "https://github.com/biomejs/pre-commit"
 rev = "v2.4.8"
 
 [[repos]]
+repo = "local"
+hooks = [
+  { id = "typecheck", name = "pnpm typecheck", entry = "pnpm typecheck", language = "system", types_or = [
+    "ts",
+    "tsx",
+  ], pass_filenames = false },
+]
+
+[[repos]]
 repo = "https://github.com/crate-ci/typos"
 rev = "v1.44.0"
 hooks = [{ id = "typos", args = ["--force-exclude"], exclude = { glob = ["src/templates/qr.html"] } }]

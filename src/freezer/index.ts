@@ -1,3 +1,4 @@
+import utils from "../utils";
 import HeaderHtml from "./templates/header.html";
 import ScriptsHtml from "./templates/scripts.html";
 import TrayHtml from "./templates/tray.html";
@@ -153,15 +154,8 @@ export class FreezerRepository {
 }
 
 export class FreezerRenderer {
-    escape(s: unknown): string {
-        return String(s)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;");
-    }
-
     humanizeDate(isoUtc: string): string {
-        const date = new Date(isoUtc.replace(" ", "T") + "Z");
+        const date = new Date(`${isoUtc.replace("·", "T")}Z`);
         const now = new Date();
 
         const diffMs = now.getTime() - date.getTime();
@@ -203,7 +197,7 @@ export class FreezerRenderer {
             .map((i) => this.trayItem(i))
             .join("");
 
-        return TrayHtml.replaceAll("{{ tray_id }}", this.escape(tray.id))
+        return TrayHtml.replaceAll("{{ tray_id }}", utils.escape(tray.id))
             .replaceAll("{{ tray_label }}", label)
             .replace("{{ items }}", trayItems);
     }
@@ -215,11 +209,11 @@ export class FreezerRenderer {
 
     trayItem(item: FreezerItem): string {
         const values: Record<string, string> = {
-            "{{ id }}": this.escape(item.id),
-            "{{ quantity }}": this.escape(item.quantity ?? 1),
-            "{{ name }}": this.escape(item.name),
+            "{{ id }}": utils.escape(item.id),
+            "{{ quantity }}": utils.escape(item.quantity ?? 1),
+            "{{ name }}": utils.escape(item.name),
             "{{ added_at }}": this.humanizeDate(item.added_at),
-            "{{ added_at_iso }}": this.escape(item.added_at),
+            "{{ added_at_iso }}": utils.escape(item.added_at),
             "{{ tray_item_style }}": this.trayItemStyle(item.added_at),
         };
         return TrayItemHtml.replace(

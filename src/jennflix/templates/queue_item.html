@@ -1,0 +1,59 @@
+<li class="flex items-center gap-2 py-2">
+    <div class="flex flex-row gap-1 shrink-0">
+        <form
+            method="POST"
+            action="/jennflix/queue/{{ queue_id }}/move"
+            hx-post="/jennflix/queue/{{ queue_id }}/move"
+            hx-target="#applet"
+            hx-push-url="false"
+            class="inline"
+        >
+            <input type="hidden" name="direction" value="up">
+            <button
+                class="btn btn-square btn-xs p-0 leading-none text-base"
+                type="submit"
+                {{ up_disabled }}
+            >
+                ▲
+            </button>
+        </form>
+        <form
+            method="POST"
+            action="/jennflix/queue/{{ queue_id }}/move"
+            hx-post="/jennflix/queue/{{ queue_id }}/move"
+            hx-target="#applet"
+            hx-push-url="false"
+            class="inline"
+        >
+            <input type="hidden" name="direction" value="down">
+            <button
+                class="btn btn-square btn-xs p-0 leading-none text-base"
+                type="submit"
+                {{ down_disabled }}
+            >
+                ▼
+            </button>
+        </form>
+    </div>
+    <div class="flex-1 min-w-0 sm:flex-none">
+        <span class="font-semibold truncate block w-full sm:w-64"
+            >{{ title }}</span
+        >
+    </div>
+    <form
+        method="POST"
+        action="/jennflix/queue/{{ queue_id }}/watched"
+        hx-post="/jennflix/queue/{{ queue_id }}/watched"
+        hx-target="#applet"
+        hx-push-url="false"
+        class="shrink-0 ml-auto sm:ml-0"
+    >
+        <button
+            class="btn btn-xs bg-green-700 text-white whitespace-nowrap"
+            type="submit"
+        >
+            <i class="bi bi-check-lg"></i>
+            Watched
+        </button>
+    </form>
+</li>

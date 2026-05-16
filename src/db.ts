@@ -30,6 +30,41 @@ const MIGRATIONS = [
             ALTER TABLE freezer__items ADD COLUMN tray_id INTEGER NOT NULL REFERENCES freezer__trays(id);
         `,
     },
+    {
+        name: "004-jennflix-title",
+        sql: `
+            CREATE TABLE IF NOT EXISTS jennflix__title(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                poster_path TEXT,
+                imdb_url TEXT NOT NULL,
+                location TEXT,
+                tags TEXT
+            );
+        `,
+    },
+    {
+        name: "005-jennflix-queue",
+        sql: `
+            CREATE TABLE IF NOT EXISTS jennflix__queue(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title_id INTEGER NOT NULL REFERENCES jennflix__title(id),
+                position INTEGER DEFAULT 0
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS jennflix__queue_title_id_unique
+            ON jennflix__queue(title_id);
+        `,
+    },
+    {
+        name: "006-jennflix-watched",
+        sql: `
+            CREATE TABLE IF NOT EXISTS jennflix__watched(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title_id INTEGER NOT NULL REFERENCES jennflix__title(id),
+                watched_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+        `,
+    },
 ];
 
 export function runMigrations(sql: SqlStorage): void {
