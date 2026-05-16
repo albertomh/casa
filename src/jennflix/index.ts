@@ -13,6 +13,7 @@ export type JennflixTitle = {
     title: string;
     poster_path: string;
     imdb_url: string;
+    media_type: string;
     location: string;
     tags: string;
 };
@@ -44,14 +45,16 @@ export class JennflixRepository {
         title: string,
         posterPath: string,
         imdbUrl: string,
+        mediaType: string,
         location: string,
         tags: string,
     ): number {
         this.sql.exec(
-            "INSERT INTO jennflix__title (title, poster_path, imdb_url, location, tags) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO jennflix__title (title, poster_path, imdb_url, media_type, location, tags) VALUES (?, ?, ?, ?, ?, ?)",
             title,
             posterPath,
             imdbUrl,
+            mediaType,
             location,
             tags,
         );
@@ -64,14 +67,16 @@ export class JennflixRepository {
         title: string,
         posterPath: string,
         imdbUrl: string,
+        mediaType: string,
         location: string,
         tags: string,
     ) {
         this.sql.exec(
-            "UPDATE jennflix__title SET title = ?, poster_path = ?, imdb_url = ?, location = ?, tags = ? WHERE id = ?",
+            "UPDATE jennflix__title SET title = ?, poster_path = ?, imdb_url = ?, media_type = ?, location = ?, tags = ? WHERE id = ?",
             title,
             posterPath,
             imdbUrl,
+            mediaType,
             location,
             tags,
             id,
@@ -216,7 +221,10 @@ export class JennflixRenderer {
             "{{ title }}": utils.escape(title.title),
             "{{ poster_path }}": utils.escape(title.poster_path ?? ""),
             "{{ imdb_url }}": utils.escape(title.imdb_url),
-            "{{ location }}": utils.escape(title.location ?? ""),
+            "{{ film_checked }}": title.media_type !== "tv" ? "checked" : "",
+            "{{ tv_checked }}": title.media_type === "tv" ? "checked" : "",
+            "{{ dvd_checked }}": title.location === "DVD" ? "checked" : "",
+            "{{ hdd_checked }}": title.location === "HDD" ? "checked" : "",
             "{{ tags }}": utils.escape(title.tags ?? ""),
         };
         return EditTitleHtml.replace(
@@ -233,6 +241,7 @@ export class JennflixRenderer {
                 ? `${utils.escape(title.poster_path)}`
                 : "",
             "{{ imdb_url }}": utils.escape(title.imdb_url),
+            "{{ media_type }}": utils.escape(title.media_type ?? "film"),
             "{{ location }}": utils.escape(title.location ?? ""),
             "{{ location_badge_class }}": title.location ? "" : "hidden",
             "{{ tags }}": utils.escape(title.tags ?? ""),

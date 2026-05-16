@@ -186,13 +186,21 @@ export class CasaDurableObject extends DurableObject<Env> {
         title: string,
         posterPath: string,
         imdbUrl: string,
+        mediaType: string,
         location: string,
         tags: string,
     ): Promise<Response> {
         if (!title || !imdbUrl) {
             return new Response("Title and IMDB URL required", { status: 422 });
         }
-        this.jennflix.addTitle(title, posterPath, imdbUrl, location, tags);
+        this.jennflix.addTitle(
+            title,
+            posterPath,
+            imdbUrl,
+            mediaType,
+            location,
+            tags,
+        );
         return this.renderJennflix();
     }
 
@@ -224,6 +232,7 @@ export class CasaDurableObject extends DurableObject<Env> {
         title: string,
         poster_path: string,
         imdb_url: string,
+        media_type: string,
         location: string,
         tags: string,
     ): Promise<Response> {
@@ -235,10 +244,13 @@ export class CasaDurableObject extends DurableObject<Env> {
             title,
             poster_path,
             imdb_url,
+            media_type,
             location,
             tags,
         );
-        return this.renderJennflix();
+        const response = this.renderJennflix("/jennflix");
+        response.headers.set("HX-Replace-Url", "/jennflix");
+        return response;
     }
 
     async jennflix_deleteTitle(id: number): Promise<Response> {
@@ -470,6 +482,7 @@ export default {
                     String(form.get("title") ?? "").trim(),
                     String(form.get("poster_path") ?? "").trim(),
                     String(form.get("imdb_url") ?? "").trim(),
+                    String(form.get("media_type") ?? "film").trim() || "film",
                     String(form.get("location") ?? "").trim(),
                     String(form.get("tags") ?? "").trim(),
                 ),
@@ -494,6 +507,8 @@ export default {
                         String(form.get("title") ?? "").trim(),
                         String(form.get("poster_path") ?? "").trim(),
                         String(form.get("imdb_url") ?? "").trim(),
+                        String(form.get("media_type") ?? "film").trim() ||
+                            "film",
                         String(form.get("location") ?? "").trim(),
                         String(form.get("tags") ?? "").trim(),
                     ),

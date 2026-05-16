@@ -1,5 +1,58 @@
 <div class="px-4">
-    <h3 class="text-lg font-semibold mt-4 mb-1">Titles</h3>
+    <div class="flex justify-between items-end w-full">
+        <h3 class="text-lg font-semibold mt-4 mb-1">Titles</h3>
+
+        <fieldset class="mt-4 mb-1">
+            <legend class="sr-only">Filter titles by media type</legend>
+
+            <div
+                class="join"
+                role="radiogroup"
+                aria-label="Filter titles by media type"
+            >
+                <input
+                    id="media-filter-film"
+                    type="radio"
+                    name="media_filter"
+                    value="film"
+                    class="sr-only js-media-filter-input"
+                >
+                <label
+                    for="media-filter-film"
+                    class="btn btn-sm join-item rounded-l-md"
+                >
+                    Film
+                </label>
+
+                <input
+                    id="media-filter-tv"
+                    type="radio"
+                    name="media_filter"
+                    value="tv"
+                    class="sr-only js-media-filter-input"
+                >
+                <label for="media-filter-tv" class="btn btn-sm join-item">
+                    TV
+                </label>
+
+                <input
+                    id="media-filter-all"
+                    type="radio"
+                    name="media_filter"
+                    value="all"
+                    class="sr-only js-media-filter-input"
+                    checked
+                >
+                <label
+                    for="media-filter-all"
+                    class="btn btn-sm join-item rounded-r-md"
+                >
+                    All
+                </label>
+            </div>
+        </fieldset>
+    </div>
+
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
         {{ titles }}
     </div>
