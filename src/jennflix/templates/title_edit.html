@@ -1,28 +1,39 @@
 <div class="container mx-auto max-w-xl">
-    <h2 class="text-2xl font-bold mb-2">New title</h2>
+    <h2 class="text-2xl font-bold mb-2">Edit title</h2>
     <form
         method="POST"
-        action="/jennflix/titles"
+        action="/jennflix/titles/{{ id }}/edit"
         class="mb-4 flex flex-col gap-2"
     >
         <input
             name="title"
             placeholder="Title"
+            value="{{ title }}"
             required
             class="input input-bordered"
         >
         <input
             name="imdb_url"
             placeholder="IMDB URL"
+            value="{{ imdb_url }}"
             required
             class="input input-bordered"
         >
-        <input name="tags" placeholder="Tags" class="input input-bordered">
+        <input
+            name="tags"
+            placeholder="Tags"
+            value="{{ tags }}"
+            class="input input-bordered"
+        >
         <input
             name="poster_path"
             placeholder="/jennflix/posters/firefly.jpg"
+            value="{{ poster_path }}"
             class="input input-bordered"
         >
-        <button type="submit" class="btn btn-primary">Add Title</button>
+        <div class="flex gap-2">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="/jennflix" class="btn btn-ghost">Cancel</a>
+        </div>
     </form>
 </div>

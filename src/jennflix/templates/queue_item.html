@@ -1,10 +1,47 @@
-<li>
-    <span class="font-semibold">{{ title }}</span>
+<li class="flex items-center gap-2 py-1">
+    <div class="flex flex-col gap-0.5">
+        <form
+            method="POST"
+            action="/jennflix/queue/{{ queue_id }}/move"
+            class="inline"
+        >
+            <input type="hidden" name="direction" value="up">
+            <button
+                class="btn btn-xs btn-ghost p-0 h-4 min-h-0 leading-none"
+                type="submit"
+                {{ up_disabled }}
+            >
+                ▲
+            </button>
+        </form>
+        <form
+            method="POST"
+            action="/jennflix/queue/{{ queue_id }}/move"
+            class="inline"
+        >
+            <input type="hidden" name="direction" value="down">
+            <button
+                class="btn btn-xs btn-ghost p-0 h-4 min-h-0 leading-none"
+                type="submit"
+                {{ down_disabled }}
+            >
+                ▼
+            </button>
+        </form>
+    </div>
+    <span class="font-semibold flex-1">{{ title }}</span>
+    <form
+        method="POST"
+        action="/jennflix/queue/{{ queue_id }}/watched"
+        class="inline"
+    >
+        <button class="btn btn-xs btn-success" type="submit">✓ Watched</button>
+    </form>
     <form
         method="POST"
         action="/jennflix/queue/{{ queue_id }}/remove"
         class="inline"
     >
-        <button class="btn btn-xs btn-error ml-2" type="submit">Remove</button>
+        <button class="btn btn-xs btn-error" type="submit">Remove</button>
     </form>
 </li>

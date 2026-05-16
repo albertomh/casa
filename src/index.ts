@@ -4,7 +4,6 @@ import { runMigrations } from "./db";
 import { type Freezer, FreezerRenderer, FreezerRepository } from "./freezer";
 import NewFreezerHtml from "./freezer/templates/new_freezer.html";
 import { JennflixRenderer, JennflixRepository } from "./jennflix";
-import NewTitleHtml from "./jennflix/templates/title_new.html";
 import FreezerHtml from "./templates/freezer.html";
 import HomeHtml from "./templates/home.html";
 import HomeContentHtml from "./templates/home_content.html";
@@ -175,32 +174,76 @@ export class CasaDurableObject extends DurableObject<Env> {
             this.jennflixRenderer.scripts() +
             this.jennflixRenderer.header() +
             this.jennflixRenderer.newTitleForm();
-        return new Response(html, {
-            headers: { "Content-Type": "text/html" },
-        });
+        return new Response(html, { headers: { "Content-Type": "text/html" } });
     }
 
-    async jennflix_addTitle(form: FormData): Promise<Response> {
-        const title = String(form.get("title") ?? "").trim();
-        const imdb_url = String(form.get("imdb_url") ?? "").trim();
-        const tags = String(form.get("tags") ?? "").trim();
+    async jennflix_addTitle(
+        title: string,
+        imdb_url: string,
+        tags: string,
+        poster: string,
+    ): Promise<Response> {
         if (!title || !imdb_url) {
             return new Response("Title and IMDB URL required", { status: 422 });
         }
-        this.jennflix.addTitle(title, imdb_url, tags);
-        return this.jennflixUi();
+        this.jennflix.addTitle(title, imdb_url, tags, poster);
+        return this.renderJennflix();
     }
 
-    async jennflix_addToQueue(form: FormData): Promise<Response> {
-        const title_id = Number(form.get("title_id"));
+    async jennflix_addToQueue(title_id: number): Promise<Response> {
         if (!title_id) return new Response("Missing title_id", { status: 422 });
         this.jennflix.addToQueue(title_id);
-        return this.jennflixUi();
+        return this.renderJennflix();
     }
 
     async jennflix_removeFromQueue(id: number): Promise<Response> {
         this.jennflix.removeFromQueue(id);
-        return this.jennflixUi();
+        return this.renderJennflix();
+    }
+
+    async jennflix_editTitleForm(id: number): Promise<Response> {
+        const title = this.jennflix.getTitle(id);
+        if (!title) return new Response("Not found", { status: 404 });
+        const html =
+            this.jennflixRenderer.scripts() +
+            this.jennflixRenderer.header() +
+            this.jennflixRenderer.editTitleForm(title);
+        return new Response(html, { headers: { "Content-Type": "text/html" } });
+    }
+
+    async jennflix_updateTitle(
+        id: number,
+        title: string,
+        poster_path: string,
+        imdb_url: string,
+        tags: string,
+    ): Promise<Response> {
+        if (!title || !imdb_url) {
+            return new Response("Title and IMDB URL required", { status: 422 });
+        }
+        this.jennflix.updateTitle(id, title, poster_path, imdb_url, tags);
+        return this.renderJennflix();
+    }
+
+    async jennflix_deleteTitle(id: number): Promise<Response> {
+        this.jennflix.deleteTitle(id);
+        return this.renderJennflix();
+    }
+
+    async jennflix_moveQueueItem(
+        id: number,
+        direction: "up" | "down",
+    ): Promise<Response> {
+        if (direction !== "up" && direction !== "down") {
+            return new Response("Invalid direction", { status: 422 });
+        }
+        this.jennflix.moveQueueItem(id, direction);
+        return this.renderJennflix();
+    }
+
+    async jennflix_markWatched(id: number): Promise<Response> {
+        this.jennflix.markWatched(id);
+        return this.renderJennflix();
     }
 }
 
@@ -289,7 +332,7 @@ export default {
             });
         }
 
-        if (["/freezer", "/freezer/"].includes(url.pathname) && request) {
+        if (["/freezer", "/freezer/"].includes(url.pathname)) {
             if (isHtmx) {
                 return new Response(FreezerHtml, {
                     headers: { "Content-Type": "text/html" },
@@ -373,9 +416,7 @@ export default {
             ["/jennflix", "/jennflix/"].includes(url.pathname) &&
             request.method === "GET"
         ) {
-            if (isHtmx) {
-                return stub.jennflixUi();
-            }
+            if (isHtmx) return stub.jennflixUi();
             const content = await stub.jennflixUi();
             const html = await content.text();
             return new Response(htmlShell(html), {
@@ -387,9 +428,7 @@ export default {
             url.pathname === "/jennflix/titles/new" &&
             request.method === "GET"
         ) {
-            if (isHtmx) {
-                return stub.jennflix_newTitleForm();
-            }
+            if (isHtmx) return stub.jennflix_newTitleForm();
             const content = await stub.jennflix_newTitleForm();
             const html = await content.text();
             return new Response(htmlShell(html), {
@@ -399,12 +438,67 @@ export default {
 
         if (url.pathname === "/jennflix/titles" && request.method === "POST") {
             const form = await request.formData();
-            return stub.jennflix_addTitle(form);
+            return stub.jennflix_addTitle(
+                String(form.get("title") ?? "").trim(),
+                String(form.get("poster_path") ?? "").trim(),
+                String(form.get("tags") ?? "").trim(),
+                String(form.get("imdb_url") ?? "").trim(),
+            );
+        }
+
+        const editTitleMatch = url.pathname.match(
+            /^\/jennflix\/titles\/(\d+)\/edit$/,
+        );
+        if (editTitleMatch) {
+            const id = Number(editTitleMatch[1]);
+            if (request.method === "GET") {
+                if (isHtmx) return stub.jennflix_editTitleForm(id);
+                const content = await stub.jennflix_editTitleForm(id);
+                const html = await content.text();
+                return new Response(htmlShell(html), {
+                    headers: { "Content-Type": "text/html" },
+                });
+            }
+            if (request.method === "POST") {
+                const form = await request.formData();
+                return stub.jennflix_updateTitle(
+                    id,
+                    String(form.get("title") ?? "").trim(),
+                    String(form.get("poster_path") ?? "").trim(),
+                    String(form.get("imdb_url") ?? "").trim(),
+                    String(form.get("tags") ?? "").trim(),
+                );
+            }
+        }
+
+        const deleteTitleMatch = url.pathname.match(
+            /^\/jennflix\/titles\/(\d+)\/delete$/,
+        );
+        if (deleteTitleMatch && request.method === "POST") {
+            return stub.jennflix_deleteTitle(Number(deleteTitleMatch[1]));
         }
 
         if (url.pathname === "/jennflix/queue" && request.method === "POST") {
             const form = await request.formData();
-            return stub.jennflix_addToQueue(form);
+            return stub.jennflix_addToQueue(Number(form.get("title_id")));
+        }
+
+        const moveQueueMatch = url.pathname.match(
+            /^\/jennflix\/queue\/(\d+)\/move$/,
+        );
+        if (moveQueueMatch && request.method === "POST") {
+            const form = await request.formData();
+            return stub.jennflix_moveQueueItem(
+                Number(moveQueueMatch[1]),
+                String(form.get("direction")) as "up" | "down",
+            );
+        }
+
+        const watchedQueueMatch = url.pathname.match(
+            /^\/jennflix\/queue\/(\d+)\/watched$/,
+        );
+        if (watchedQueueMatch && request.method === "POST") {
+            return stub.jennflix_markWatched(Number(watchedQueueMatch[1]));
         }
 
         const removeQueueMatch = url.pathname.match(

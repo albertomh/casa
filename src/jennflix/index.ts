@@ -3,6 +3,7 @@ import HeaderHtml from "./templates/header.html";
 import AllQueueHtml from "./templates/queue_all.html";
 import QueueItemHtml from "./templates/queue_item.html";
 import ScriptsHtml from "./templates/scripts.html";
+import EditTitleHtml from "./templates/title_edit.html";
 import TitleItemHtml from "./templates/title_item.html";
 import NewTitleHtml from "./templates/title_new.html";
 import AllTitlesHtml from "./templates/titles_all.html";
@@ -10,6 +11,7 @@ import AllTitlesHtml from "./templates/titles_all.html";
 export type JennflixTitle = {
     id: number;
     title: string;
+    poster_path: string;
     imdb_url: string;
     tags: string;
 };
@@ -17,6 +19,7 @@ export type JennflixTitle = {
 export type JennflixQueue = {
     id: number;
     title_id: number;
+    position: number;
 };
 
 export class JennflixRepository {
@@ -24,14 +27,28 @@ export class JennflixRepository {
 
     listTitles(): JennflixTitle[] {
         return this.sql
-            .exec("SELECT * FROM jennflix__title")
+            .exec("SELECT * FROM jennflix__title ORDER BY title ASC")
             .toArray() as JennflixTitle[];
     }
 
-    addTitle(title: string, imdb_url: string, tags: string): number {
+    getTitle(id: number): JennflixTitle | null {
+        return (
+            (this.sql
+                .exec("SELECT * FROM jennflix__title WHERE id = ?", id)
+                .toArray()[0] as JennflixTitle) ?? null
+        );
+    }
+
+    addTitle(
+        title: string,
+        poster_path: string,
+        imdb_url: string,
+        tags: string,
+    ): number {
         this.sql.exec(
-            "INSERT INTO jennflix__title (title, imdb_url, tags) VALUES (?, ?, ?)",
+            "INSERT INTO jennflix__title (title, poster_path, imdb_url, tags) VALUES (?, ?, ?, ?)",
             title,
+            poster_path,
             imdb_url,
             tags,
         );
@@ -39,16 +56,45 @@ export class JennflixRepository {
             .id as number;
     }
 
+    updateTitle(
+        id: number,
+        title: string,
+        poster_path: string,
+        imdb_url: string,
+        tags: string,
+    ) {
+        this.sql.exec(
+            "UPDATE jennflix__title SET title = ?, poster_path = ?, imdb_url = ?, tags = ? WHERE id = ?",
+            title,
+            poster_path,
+            imdb_url,
+            tags,
+            id,
+        );
+    }
+
+    deleteTitle(id: number) {
+        this.sql.exec("DELETE FROM jennflix__queue WHERE title_id = ?", id);
+        this.sql.exec("DELETE FROM jennflix__title WHERE id = ?", id);
+    }
+
     listQueue(): JennflixQueue[] {
         return this.sql
-            .exec("SELECT * FROM jennflix__queue")
+            .exec("SELECT * FROM jennflix__queue ORDER BY position ASC, id ASC")
             .toArray() as JennflixQueue[];
     }
 
     addToQueue(title_id: number): number {
+        const maxPos =
+            (this.sql
+                .exec(
+                    "SELECT COALESCE(MAX(position), -1) as m FROM jennflix__queue",
+                )
+                .one().m as number) ?? -1;
         this.sql.exec(
-            "INSERT INTO jennflix__queue (title_id) VALUES (?)",
+            "INSERT INTO jennflix__queue (title_id, position) VALUES (?, ?)",
             title_id,
+            maxPos + 1,
         );
         return this.sql.exec("SELECT last_insert_rowid() as id").one()
             .id as number;
@@ -56,12 +102,65 @@ export class JennflixRepository {
 
     removeFromQueue(id: number) {
         this.sql.exec("DELETE FROM jennflix__queue WHERE id = ?", id);
+        this.reindexQueue();
+    }
+
+    markWatched(queue_id: number) {
+        const row = this.sql
+            .exec("SELECT title_id FROM jennflix__queue WHERE id = ?", queue_id)
+            .toArray()[0] as { title_id: number } | undefined;
+        if (row) {
+            this.sql.exec(
+                "INSERT INTO jennflix__watched (title_id) VALUES (?)",
+                row.title_id,
+            );
+        }
+        this.removeFromQueue(queue_id);
+    }
+
+    moveQueueItem(id: number, direction: "up" | "down") {
+        const queue = this.listQueue();
+        const idx = queue.findIndex((q) => q.id === id);
+        if (idx === -1) return;
+        const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+        if (swapIdx < 0 || swapIdx >= queue.length) return;
+
+        const a = queue[idx];
+        const b = queue[swapIdx];
+        // Swap positions
+        this.sql.exec(
+            "UPDATE jennflix__queue SET position = ? WHERE id = ?",
+            b.position,
+            a.id,
+        );
+        this.sql.exec(
+            "UPDATE jennflix__queue SET position = ? WHERE id = ?",
+            a.position,
+            b.id,
+        );
+    }
+
+    private reindexQueue() {
+        const queue = this.sql
+            .exec(
+                "SELECT id FROM jennflix__queue ORDER BY position ASC, id ASC",
+            )
+            .toArray() as { id: number }[];
+        queue.forEach((q, i) => {
+            this.sql.exec(
+                "UPDATE jennflix__queue SET position = ? WHERE id = ?",
+                i,
+                q.id,
+            );
+        });
     }
 
     getTitleById(id: number): JennflixTitle | null {
-        return this.sql
-            .exec("SELECT * FROM jennflix__title WHERE id = ?", id)
-            .one() as JennflixTitle | null;
+        return (
+            (this.sql
+                .exec("SELECT * FROM jennflix__title WHERE id = ?", id)
+                .toArray()[0] as JennflixTitle) ?? null
+        );
     }
 }
 
@@ -78,12 +177,29 @@ export class JennflixRenderer {
         return NewTitleHtml;
     }
 
+    editTitleForm(title: JennflixTitle): string {
+        const values: Record<string, string> = {
+            "{{ id }}": utils.escape(title.id),
+            "{{ title }}": utils.escape(title.title),
+            "{{ imdb_url }}": utils.escape(title.imdb_url),
+            "{{ tags }}": utils.escape(title.tags ?? ""),
+            "{{ poster_path }}": utils.escape(title.poster_path ?? ""),
+        };
+        return EditTitleHtml.replace(
+            /\{\{ [\w]+ \}\}/g,
+            (match: string) => values[match] ?? match,
+        );
+    }
+
     titleItem(title: JennflixTitle): string {
         const values: Record<string, string> = {
             "{{ id }}": utils.escape(title.id),
             "{{ title }}": utils.escape(title.title),
             "{{ imdb_url }}": utils.escape(title.imdb_url),
             "{{ tags }}": utils.escape(title.tags ?? ""),
+            "{{ poster_path }}": title.poster_path
+                ? `${utils.escape(title.poster_path)}`
+                : "",
         };
         return TitleItemHtml.replace(
             /\{\{ [\w]+ \}\}/g,
@@ -91,10 +207,17 @@ export class JennflixRenderer {
         );
     }
 
-    queueItem(title: JennflixTitle, queueId: number): string {
+    queueItem(
+        title: JennflixTitle,
+        queueId: number,
+        isFirst: boolean,
+        isLast: boolean,
+    ): string {
         const values: Record<string, string> = {
             "{{ title }}": utils.escape(title.title),
             "{{ queue_id }}": utils.escape(queueId),
+            "{{ up_disabled }}": isFirst ? "disabled" : "",
+            "{{ down_disabled }}": isLast ? "disabled" : "",
         };
         return QueueItemHtml.replace(
             /\{\{ [\w]+ \}\}/g,
@@ -104,9 +227,11 @@ export class JennflixRenderer {
 
     queue(titles: JennflixTitle[], queue: JennflixQueue[]): string {
         const queueHtml = queue
-            .map((q) => {
+            .map((q, i) => {
                 const t = titles.find((t) => t.id === q.title_id);
-                return t ? this.queueItem(t, q.id) : "";
+                return t
+                    ? this.queueItem(t, q.id, i === 0, i === queue.length - 1)
+                    : "";
             })
             .join("");
         return AllQueueHtml.replace("{{ queue }}", queueHtml);

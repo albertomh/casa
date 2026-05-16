@@ -1,13 +1,50 @@
-<li>
-    <span class="font-semibold">{{ title }}</span>
-    <a href="{{ imdb_url }}" target="_blank" class="text-blue-600 underline"
-        >IMDB</a
-    >
-    <span class="text-xs text-gray-500">{{ tags }}</span>
-    <form method="POST" action="/jennflix/queue" class="inline">
-        <input type="hidden" name="title_id" value="{{ id }}">
-        <button class="btn btn-xs btn-primary ml-2" type="submit">
-            Add to Queue
-        </button>
-    </form>
-</li>
+<div class="flex flex-col gap-1">
+    <div class="relative group">
+        <img
+            src="{{ poster_path }}"
+            alt="{{ title }}"
+            class="w-full aspect-[2/3] object-cover rounded shadow"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+        >
+        <div
+            class="w-full aspect-[2/3] rounded shadow bg-base-300 items-center justify-center text-sm text-center p-2 hidden"
+        >
+            {{ title }}
+        </div>
+        <div
+            class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded flex flex-col items-center justify-center gap-2 p-2"
+        >
+            <a
+                href="{{ imdb_url }}"
+                target="_blank"
+                class="btn btn-xs btn-ghost text-white w-full"
+                >IMDB</a
+            >
+            <form method="POST" action="/jennflix/queue" class="w-full">
+                <input type="hidden" name="title_id" value="{{ id }}">
+                <button class="btn btn-xs btn-primary w-full" type="submit">
+                    + Queue
+                </button>
+            </form>
+            <a
+                href="/jennflix/titles/{{ id }}/edit"
+                class="btn btn-xs btn-ghost text-white w-full"
+                >Edit</a
+            >
+            <form
+                method="POST"
+                action="/jennflix/titles/{{ id }}/delete"
+                class="w-full"
+            >
+                <button
+                    class="btn btn-xs btn-error btn-outline w-full"
+                    type="submit"
+                >
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+    <span class="text-xs font-semibold truncate">{{ title }}</span>
+    <span class="text-xs text-gray-500 truncate">{{ tags }}</span>
+</div>

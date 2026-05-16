@@ -36,6 +36,7 @@ const MIGRATIONS = [
             CREATE TABLE IF NOT EXISTS jennflix__title(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
+                poster_path TEXT,
                 imdb_url TEXT NOT NULL,
                 tags TEXT
             );
@@ -46,7 +47,18 @@ const MIGRATIONS = [
         sql: `
             CREATE TABLE IF NOT EXISTS jennflix__queue(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title_id INTEGER NOT NULL REFERENCES jennflix__title(id)
+                title_id INTEGER NOT NULL REFERENCES jennflix__title(id),
+                position INTEGER DEFAULT 0
+            );
+        `,
+    },
+    {
+        name: "006-jennflix-watched",
+        sql: `
+            CREATE TABLE IF NOT EXISTS jennflix__watched(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title_id INTEGER NOT NULL REFERENCES jennflix__title(id),
+                watched_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
         `,
     },
