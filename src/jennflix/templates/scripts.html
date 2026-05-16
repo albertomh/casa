@@ -17,7 +17,58 @@ h6 {
     font-weight: 600;
     font-style: normal;
 }
+
+details[data-title-card] > summary::-webkit-details-marker {
+    display: none;
+}
+
+details[data-title-card][open] .js-title-actions {
+    display: flex;
+}
 </style>
 
 <script id="applet-scripts" hx-swap-oob="true">
+(() => {
+    const buttonId = "jennflix-header-add-title-btn";
+    const deleteTimers = new WeakMap();
+
+    document.addEventListener(
+        "click",
+        (event) => {
+            const deleteButton = event.target.closest(".js-title-delete-btn");
+            if (!deleteButton) return;
+
+            const card = deleteButton.closest("details[data-title-card]");
+            if (!card) return;
+
+            if (card.dataset.pendingDelete === "true") {
+                card.dataset.pendingDelete = "false";
+                clearTimeout(deleteTimers.get(card));
+                deleteTimers.delete(card);
+                deleteButton.textContent = "Delete";
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            card.dataset.pendingDelete = "true";
+            deleteButton.innerHTML =
+                '<i class="bi bi-trash3-fill text-red-600"></i> Delete forever';
+
+            const timer = setTimeout(() => {
+                card.dataset.pendingDelete = "false";
+                deleteButton.innerHTML = "Delete";
+                deleteTimers.delete(card);
+            }, 5000);
+            deleteTimers.set(card, timer);
+        },
+        true,
+    );
+
+    window.addEventListener("popstate", () => {
+        setVisibility(window.location.pathname);
+    });
+
+    setVisibility(window.location.pathname);
+})();
 </script>

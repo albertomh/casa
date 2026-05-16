@@ -1,43 +1,49 @@
-<div class="flex flex-col gap-1">
-    <div class="relative group">
+<details
+    class="group relative rounded-xl overflow-hidden bg-base-100 shadow"
+    data-title-card
+>
+    <summary class="list-none cursor-pointer select-none">
         <img
             src="{{ poster_path }}"
             alt="{{ title }}"
-            class="w-full aspect-[2/3] object-cover rounded shadow"
+            class="w-full aspect-[2/3] object-cover"
             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
         >
         <div
-            class="w-full aspect-[2/3] rounded shadow bg-base-300 items-center justify-center text-sm text-center p-2 hidden"
+            class="w-full aspect-[2/3] bg-base-300 items-center justify-center text-sm text-center p-4 hidden"
         >
             {{ title }}
         </div>
-        <div
-            class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded flex flex-col items-center justify-center gap-2 p-2"
-        >
+    </summary>
+    <div
+        class="js-title-actions pointer-events-none absolute inset-0 hidden flex-col justify-end gap-3 bg-black/70 p-3"
+    >
+        <div class="grid grid-cols-1 gap-2 pointer-events-auto">
             <a
                 href="{{ imdb_url }}"
                 target="_blank"
-                class="btn btn-xs btn-ghost text-white w-full"
-                >IMDB</a
+                rel="noopener noreferrer"
+                class="btn btn-sm btn-outline min-h-11 text-sm text-white"
+                >IMDB <i class="bi bi-box-arrow-up-right"></i></a
             >
-            <form method="POST" action="/jennflix/queue" class="w-full">
+            <form method="POST" action="/jennflix/queue" class="contents">
                 <input type="hidden" name="title_id" value="{{ id }}">
-                <button class="btn btn-xs btn-primary w-full" type="submit">
-                    + Queue
+                <button
+                    class="btn btn-sm btn-primary min-h-11 text-sm"
+                    type="submit"
+                >
+                    <i class="bi bi-plus-lg"></i>
+                    My List
                 </button>
             </form>
             <a
                 href="/jennflix/titles/{{ id }}/edit"
-                class="btn btn-xs btn-ghost text-white w-full"
+                class="btn btn-sm btn-ghost min-h-11 text-sm text-white"
                 >Edit</a
             >
-            <form
-                method="POST"
-                action="/jennflix/titles/{{ id }}/delete"
-                class="w-full"
-            >
+            <form method="POST" action="/jennflix/titles/{{ id }}/delete">
                 <button
-                    class="btn btn-xs btn-error btn-outline w-full"
+                    class="btn btn-sm btn-outline text-red-600 border-red-600 min-h-11 text-sm js-title-delete-btn w-full"
                     type="submit"
                 >
                     Delete
@@ -45,6 +51,4 @@
             </form>
         </div>
     </div>
-    <span class="text-xs font-semibold truncate">{{ title }}</span>
-    <span class="text-xs text-gray-500 truncate">{{ tags }}</span>
-</div>
+</details>
